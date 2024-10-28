@@ -18,30 +18,30 @@ import (
 	pb "github.com/grpc-vtb/api/proto/gen"
 	_ "github.com/grpc-vtb/internal/interceptors/jwtInterceptor"
 )
+
 // TODO: Вынести в конфиги
 const (
 	serverCertFile   = "cert/server-cert.pem"
 	serverKeyFile    = "cert/server-key.pem"
 	clientCACertFile = "cert/ca-cert.pem"
-    secretKey = "secret"
+	secretKey        = "secret"
 )
 
 // const (
 //     keycloakPublicKey = 'keycloakKey' TODO: Вынести в конфиги
 // )
 
-
 type server struct {
-    pb.UnimplementedQuoteServiceServer
+	pb.UnimplementedQuoteServiceServer
 }
 
 func (s *server) GetQuote(ctx context.Context, req *pb.QuoteRequest) (*pb.QuoteResponse, error) {
-    quote := "Success! Example quote for category: " + req.Category
-    return &pb.QuoteResponse{Quote: quote}, nil
+	quote := "Success! Example quote for category: " + req.Category
+	return &pb.QuoteResponse{Quote: quote}, nil
 }
 
 func loadTLSCredentials(certFile string, keyFile string) (credentials.TransportCredentials, error) {
-    pemClientCA, err := os.ReadFile(clientCACertFile)
+	pemClientCA, err := os.ReadFile(clientCACertFile)
 	if err != nil {
 		return nil, err
 	}
@@ -51,63 +51,60 @@ func loadTLSCredentials(certFile string, keyFile string) (credentials.TransportC
 		return nil, fmt.Errorf("failed to add client CA's certificate")
 	}
 
-    serverCert, err :=  tls.LoadX509KeyPair(certFile, keyFile)
-    if err != nil {
-        return nil, err
-    }
-   
-    config := &tls.Config{
-        Certificates: []tls.Certificate{tls.Certificate(serverCert)},
-        ClientAuth:  tls.RequireAndVerifyClientCert,
-        ClientCAs: certPool,
-    }
-   
-    return credentials.NewTLS(config), nil
+	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	config := &tls.Config{
+		Certificates: []tls.Certificate{tls.Certificate(serverCert)},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    certPool,
+	}
+
+	return credentials.NewTLS(config), nil
 }
 
-
-
 func main() {
-    tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
-    flag.Parse()
+	tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
+	flag.Parse()
 
-    certFile := serverCertFile
-    keyFile := serverKeyFile
+	certFile := serverCertFile
+	keyFile := serverKeyFile
 
-    var creds credentials.TransportCredentials
-    var err error
+	var creds credentials.TransportCredentials
+	var err error
 
-    if *tlsEnabled {
-        creds, err = loadTLSCredentials(certFile, keyFile)
-        if err != nil {
-            log.Fatalf("failed to load key pair: %v", err)
-        }
-    }
+	if *tlsEnabled {
+		creds, err = loadTLSCredentials(certFile, keyFile)
+		if err != nil {
+			log.Fatalf("failed to load key pair: %v", err)
+		}
+	}
 
-    serverOpts := []grpc.ServerOption{}
-    
-    if *tlsEnabled {
-        serverOpts = append(serverOpts, grpc.Creds(creds))
-    }
+	serverOpts := []grpc.ServerOption{}
 
-    // Задел для проверки jwt
-    // serverOpts = append(serverOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-    //     jwtInterceptor.JWTInterceptor(secretKey),
-    // )))
-  
+	if *tlsEnabled {
+		serverOpts = append(serverOpts, grpc.Creds(creds))
+	}
 
-    srv := grpc.NewServer(serverOpts...)
+	// Задел для проверки jwt
+	// serverOpts = append(serverOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+	//     jwtInterceptor.JWTInterceptor(secretKey),
+	// )))
 
-    pb.RegisterQuoteServiceServer(srv, &server{})
-    reflection.Register(srv)
+	srv := grpc.NewServer(serverOpts...)
 
-    listener, err := net.Listen("tcp", ":50051")
-    if err != nil {
-        log.Fatalf("failed to listen: %v", err)
-    }
+	pb.RegisterQuoteServiceServer(srv, &server{})
+	reflection.Register(srv)
 
-    log.Println("Starting gRPC server on port :50051... (TLS enabled:", *tlsEnabled, ")")
-    if err := srv.Serve(listener); err != nil {
-        log.Fatalf("failed to serve: %v", err)
-    }
+	listener, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	log.Println("Starting gRPC server on port :50051... (TLS enabled:", *tlsEnabled, ")")
+	if err := srv.Serve(listener); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }
