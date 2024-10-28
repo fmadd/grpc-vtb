@@ -6,19 +6,19 @@ import (
 	"crypto/x509"
 	"flag"
 	"fmt"
-	_ "fmt"
 	"log"
 	"net"
 	"os"
-	"time"
 
+	_ "github.com/grpc-ecosystem/go-grpc-middleware"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 
-    _ "github.com/grpc-vtb/internal/middleware/jwtmiddleware"
 	pb "github.com/grpc-vtb/api/proto/gen"
+	_ "github.com/grpc-vtb/internal/interceptors/jwtInterceptor"
 )
+// TODO: Вынести в конфиги
 const (
 	serverCertFile   = "cert/server-cert.pem"
 	serverKeyFile    = "cert/server-key.pem"
@@ -26,12 +26,17 @@ const (
     secretKey = "secret"
 )
 
+// const (
+//     keycloakPublicKey = 'keycloakKey' TODO: Вынести в конфиги
+// )
+
+
 type server struct {
     pb.UnimplementedQuoteServiceServer
 }
 
 func (s *server) GetQuote(ctx context.Context, req *pb.QuoteRequest) (*pb.QuoteResponse, error) {
-    quote := "Example quote for category: " + req.Category
+    quote := "Success! Example quote for category: " + req.Category
     return &pb.QuoteResponse{Quote: quote}, nil
 }
 
@@ -46,13 +51,11 @@ func loadTLSCredentials(certFile string, keyFile string) (credentials.TransportC
 		return nil, fmt.Errorf("failed to add client CA's certificate")
 	}
 
-    // Load server's certificate and private key
     serverCert, err :=  tls.LoadX509KeyPair(certFile, keyFile)
     if err != nil {
         return nil, err
     }
    
-    // Create the credentials and return it
     config := &tls.Config{
         Certificates: []tls.Certificate{tls.Certificate(serverCert)},
         ClientAuth:  tls.RequireAndVerifyClientCert,
@@ -62,25 +65,9 @@ func loadTLSCredentials(certFile string, keyFile string) (credentials.TransportC
     return credentials.NewTLS(config), nil
 }
 
-func loggingInterceptor(
-    ctx context.Context,
-    req interface{},
-    info *grpc.UnaryServerInfo,
-    handler grpc.UnaryHandler,
-) (interface{}, error) {
-    start := time.Now()
 
-    log.Printf("Received request: %s, with payload: %v", info.FullMethod, req)
-
-    resp, err := handler(ctx, req)
-
-    log.Printf("Response for request: %s, duration: %s, error: %v", info.FullMethod, time.Since(start), err)
-
-    return resp, err
-}
 
 func main() {
-    // Adding command line flags
     tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
     flag.Parse()
 
@@ -90,7 +77,6 @@ func main() {
     var creds credentials.TransportCredentials
     var err error
 
-    // Load TLS credentials if enabled
     if *tlsEnabled {
         creds, err = loadTLSCredentials(certFile, keyFile)
         if err != nil {
@@ -98,15 +84,17 @@ func main() {
         }
     }
 
-    serverOpts := []grpc.ServerOption{
-        // Add credentials or empty if TLS is not enabled
-    }
+    serverOpts := []grpc.ServerOption{}
+    
     if *tlsEnabled {
         serverOpts = append(serverOpts, grpc.Creds(creds))
     }
 
-    serverOpts = append(serverOpts, grpc.UnaryInterceptor(loggingInterceptor))
-    //serverOpts = append(serverOpts, grpc.UnaryInterceptor(jwtmiddleware.JWTMiddleware(secretKey)))
+    // Задел для проверки jwt
+    // serverOpts = append(serverOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+    //     jwtInterceptor.JWTInterceptor(secretKey),
+    // )))
+  
 
     srv := grpc.NewServer(serverOpts...)
 
