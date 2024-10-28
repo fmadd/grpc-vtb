@@ -15,11 +15,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	_ "google.golang.org/grpc/metadata"
 )
 const (
 	clientCertFile   = "cert/client-cert.pem"
 	clientKeyFile    = "cert/client-key.pem"
 	clientCACertFile = "cert/ca-cert.pem"
+    JwtToken = "token_example"
 )
 
 func loadTLSCredentials(certFile string) (credentials.TransportCredentials, error) {
@@ -47,16 +49,14 @@ func loadTLSCredentials(certFile string) (credentials.TransportCredentials, erro
 }
 
 func main() {
-    // Добавление флага для включения/выключения TLS
     tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
     flag.Parse()
 
     var creds credentials.TransportCredentials
     var err error
 
-    // Подготовка соединения в зависимости от режима
     if *tlsEnabled {
-        certFile := clientCACertFile // Путь к CA сертификату
+        certFile := clientCACertFile
         creds, err = loadTLSCredentials(certFile)
         if err != nil {
             log.Fatalf("failed to create TLS credentials: %v", err)
@@ -65,10 +65,8 @@ func main() {
 
     var conn *grpc.ClientConn
     if *tlsEnabled {
-        // Подключение с использованием TLS
         conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds))
     } else {
-        // Подключение без TLS
         conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
     }
 
@@ -81,6 +79,9 @@ func main() {
 
     ctx, cancel := context.WithTimeout(context.Background(), time.Second)
     defer cancel()
+
+    // Задел для использования jwt токенов от клиента
+    // ctx = metadata.NewOutgoingContext(context.Background(), metadata.Pairs("authorization", "Bearer "+ JwtToken ))
 
     req := &pb.QuoteRequest{Category: "inspiration"}
     res, err := client.GetQuote(ctx, req)
