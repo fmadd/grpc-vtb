@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -13,6 +14,12 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+)
+const (
+	clientCertFile   = "cert/client-cert.pem"
+	clientKeyFile    = "cert/client-key.pem"
+	clientCACertFile = "cert/ca-cert.pem"
 )
 
 func loadTLSCredentials(certFile string) (credentials.TransportCredentials, error) {
@@ -26,41 +33,60 @@ func loadTLSCredentials(certFile string) (credentials.TransportCredentials, erro
 		return nil, fmt.Errorf("failed to add server CA's certificate")
 	}
 
-	config := &tls.Config{
+    clientCert, err :=  tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+    if err != nil {
+        return nil, err
+    }
 
-		RootCAs:      certPool,
+	config := &tls.Config{
+        Certificates: []tls.Certificate{clientCert},
+		RootCAs: certPool,
 	}
 
 	return credentials.NewTLS(config), nil
 }
 
 func main() {
-	// Настройка TLS
-	certFile := "cert/ca-cert.pem" // Путь к вашему SSL сертификату
+    // Добавление флага для включения/выключения TLS
+    tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
+    flag.Parse()
 
-	// Создаем TLS конфигурацию
-	creds, err := loadTLSCredentials(certFile)
-	if err != nil {
-		log.Fatalf("failed to create TLS credentials: %v", err)
-	}
+    var creds credentials.TransportCredentials
+    var err error
 
-	// Подключаемся к gRPC серверу
-	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds))
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
+    // Подготовка соединения в зависимости от режима
+    if *tlsEnabled {
+        certFile := clientCACertFile // Путь к CA сертификату
+        creds, err = loadTLSCredentials(certFile)
+        if err != nil {
+            log.Fatalf("failed to create TLS credentials: %v", err)
+        }
+    }
 
-	client := pb.NewQuoteServiceClient(conn)
+    var conn *grpc.ClientConn
+    if *tlsEnabled {
+        // Подключение с использованием TLS
+        conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds))
+    } else {
+        // Подключение без TLS
+        conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+    }
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+    if err != nil {
+        log.Fatalf("did not connect: %v", err)
+    }
+    defer conn.Close()
 
-	req := &pb.QuoteRequest{Category: "inspiration"}
-	res, err := client.GetQuote(ctx, req)
-	if err != nil {
-		log.Fatalf("could not get quote: %v", err)
-	}
+    client := pb.NewQuoteServiceClient(conn)
 
-	log.Printf("Quote: %s", res.Quote)
+    ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+    defer cancel()
+
+    req := &pb.QuoteRequest{Category: "inspiration"}
+    res, err := client.GetQuote(ctx, req)
+    if err != nil {
+        log.Fatalf("could not get quote: %v", err)
+    }
+
+    log.Printf("Quote: %s", res.Quote)
 }

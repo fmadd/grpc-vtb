@@ -4,10 +4,16 @@ clean:
 	rm pb/*.go
 
 server:
-	go run cmd/server/main.go
+	go run cmd/server/main.go -tls=false
+
+server-tls:
+	go run cmd/server/main.go -tls=true
 
 client:
-	go run cmd/client/client.go 
+	go run cmd/client/client.go -tls=false
+
+client-tls:
+	go run cmd/client/client.go -tls=true
 
 cert:
 	cd cert; ./gen.sh; cd ..
