@@ -2,30 +2,25 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"flag"
-	"fmt"
 	"log"
 	"net"
-	"os"
 
 	_ "github.com/grpc-ecosystem/go-grpc-middleware"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	_ "google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
+	userPb "github.com/grpc-vtb/internal/user/proto"
+	authPb "github.com/grpc-vtb/internal/auth/proto"
 	_ "github.com/grpc-vtb/internal/interceptors/jwtInterceptor"
+	"github.com/grpc-vtb/pkg/cert"
 )
 
 // TODO: Вынести в конфиги
-const (
-	serverCertFile   = "cert/server-cert.pem"
-	serverKeyFile    = "cert/server-key.pem"
-	clientCACertFile = "cert/ca-cert.pem"
-	secretKey        = "secret"
-)
+
 
 // const (
 //     keycloakPublicKey = 'keycloakKey' TODO: Вынести в конфиги
@@ -33,56 +28,85 @@ const (
 
 type server struct {
 	pb.UnimplementedQuoteServiceServer
+    authClient authPb.AuthServiceClient
+    userClient userPb.UserServiceClient
 }
+
+
+// func (s *server) Authenticate(ctx context.Context, req *gateway.AuthRequest) (*gateway.AuthResponse, error) {
+//     // Перенаправление запроса к AuthService
+//     res, err := s.authClient.Login(ctx, &auth.LoginRequest{
+//         Username: req.Username,
+//         Password: req.Password,
+//     })
+//     if err != nil {
+//         return nil, err
+//     }
+//     return &gateway.AuthResponse{Token: res.Token}, nil
+// }
+
+// func (s *server) FetchUser(ctx context.Context, req *gateway.UserRequest) (*gateway.UserResponse, error) {
+//     // Перенаправление запроса к UserService
+//     res, err := s.userClient.GetUser(ctx, &user.GetUserRequest{UserId: req.UserId})
+//     if err != nil {
+//         return nil, err
+//     }
+//     return &gateway.UserResponse{
+//         Username: res.Username,
+//         Email:    res.Email,
+//     }, nil
+// }
 
 func (s *server) GetQuote(ctx context.Context, req *pb.QuoteRequest) (*pb.QuoteResponse, error) {
 	quote := "Success! Example quote for category: " + req.Category
 	return &pb.QuoteResponse{Quote: quote}, nil
 }
 
-func loadTLSCredentials(certFile string, keyFile string) (credentials.TransportCredentials, error) {
-	pemClientCA, err := os.ReadFile(clientCACertFile)
-	if err != nil {
-		return nil, err
-	}
+const (
+	serverCertFile   = "./cert/gatewayService/certFile.pem"
+	serverKeyFile    = "./cert/gatewayService/keyFile.pem"
+	CACertFile = "./cert/ca-cert.pem"
+    CACertKey = "./cert/ca-key.pem"
+  
+)
 
-	certPool := x509.NewCertPool()
-	if !certPool.AppendCertsFromPEM(pemClientCA) {
-		return nil, fmt.Errorf("failed to add client CA's certificate")
-	}
-
-	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return nil, err
-	}
-
-	config := &tls.Config{
-		Certificates: []tls.Certificate{tls.Certificate(serverCert)},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    certPool,
-	}
-
-	return credentials.NewTLS(config), nil
-}
 
 func main() {
 	tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
 	flag.Parse()
 
-	certFile := serverCertFile
-	keyFile := serverKeyFile
-
 	var creds credentials.TransportCredentials
 	var err error
 
 	if *tlsEnabled {
-		creds, err = loadTLSCredentials(certFile, keyFile)
+		err = cert.GenerateCertificate(serverCertFile , serverKeyFile)
+		if err != nil {
+			log.Fatalf("error generating certificate: %s", err)
+		}
+		creds, err = cert.LoadServerTLSCredentials(serverCertFile , serverKeyFile)
 		if err != nil {
 			log.Fatalf("failed to load key pair: %v", err)
 		}
 	}
 
 	serverOpts := []grpc.ServerOption{}
+
+
+    //Здесь создайте gRPC клиентов для AuthService и UserService
+    // authConn, err := grpc.Dial("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
+    // if err != nil {
+    //     log.Fatalf("did not connect: %v", err)
+    // }
+    // defer authConn.Close()
+    // authClient := auth.NewAuthServiceClient(authConn)
+
+    // userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
+    // if err != nil {
+    //     log.Fatalf("did not connect: %v", err)
+    // }
+    // defer userConn.Close()
+    // userClient := user.NewUserServiceClient(userConn)
+
 
 	if *tlsEnabled {
 		serverOpts = append(serverOpts, grpc.Creds(creds))
@@ -96,6 +120,11 @@ func main() {
 	srv := grpc.NewServer(serverOpts...)
 
 	pb.RegisterQuoteServiceServer(srv, &server{})
+    // gateway.RegisterGatewayServiceServer(srv, &server{
+    //     authClient: authClient,
+    //     userClient: userClient,
+    // })
+
 	reflection.Register(srv)
 
 	listener, err := net.Listen("tcp", ":50051")

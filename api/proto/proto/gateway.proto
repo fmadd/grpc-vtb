@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package gateway;
+
+option go_package = "./gen";
+
+service GatewayService {
+    rpc Authenticate (AuthRequest) returns (AuthResponse);
+    rpc FetchUser (UserRequest) returns (UserResponse);
+}
+
+message AuthRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message AuthResponse {
+    string token = 1;
+}
+
+message UserRequest {
+    int64 user_id = 1;
+}
+
+message UserResponse {
+    string username = 1;
+    string email = 2;
+}
