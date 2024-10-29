@@ -2,13 +2,12 @@ package service
 
 import (
 	"context"
-	"github.com/grpc-vtb/internal/repository/models"
+	"github.com/grpc-vtb/internal/user/proto"
 )
 
 type UserService interface {
-	CreateUser(ctx context.Context, user models.User) (int64, error)
-	GetUserByID(ctx context.Context, userID int64) (*models.User, error)
-	UpdateUser(ctx context.Context, user models.User) error
-	DeleteUser(ctx context.Context, userID int64) error
-	AuthenticateUser(ctx context.Context, username, password string) (string, error)
+	CreateUser(ctx context.Context, req *proto.CreateUserRequest) (*proto.CreateUserResponse, error)
+	GetUserByID(ctx context.Context, req *proto.GetUserByIDRequest) (*proto.GetUserByIDResponse, error)
+	UpdateUser(ctx context.Context, req *proto.UpdateUserRequest) (*proto.UpdateUserResponse, error)
+	DeleteUser(ctx context.Context, req proto.DeleteUserRequest) (proto.DeleteUserResponse, error)
 }
