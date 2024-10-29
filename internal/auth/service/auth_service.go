@@ -22,5 +22,5 @@ type AuthService interface {
 	Login(ctx context.Context, auth UserAuth) (TokenResponse, error)
 
 	// ValidateToken - метод для проверки валидности JWT токена.
-	ValidateToken(ctx context.Context, token string) (bool, error)
+	ValidateToken(ctx context.Context, token string) (string, error)
 }
