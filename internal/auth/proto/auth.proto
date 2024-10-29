@@ -3,10 +3,7 @@ syntax = "proto3";
 
 package auth;
 
-service AuthService {
-  rpc Login (UserAuth) returns (TokenResponse);
-  rpc ValidateToken (TokenRequest) returns (RoleResponse);
-}
+option go_package = "internal/auth/proto";
 
 message UserAuth {
   string username = 1;
@@ -22,7 +19,11 @@ message TokenResponse {
   int64 expiresIn = 2;
 }
 
-// роль пользователя
 message RoleResponse {
-  string role = 1; // "registered" или "guest"
+  string role = 1;
+}
+
+service AuthService {
+  rpc Login (UserAuth) returns (TokenResponse);
+  rpc ValidateToken (TokenRequest) returns (RoleResponse);
 }
