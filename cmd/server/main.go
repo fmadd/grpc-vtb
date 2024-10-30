@@ -13,14 +13,13 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
-	userPb "github.com/grpc-vtb/internal/user/proto"
 	authPb "github.com/grpc-vtb/internal/auth/proto"
 	_ "github.com/grpc-vtb/internal/interceptors/jwtInterceptor"
+	userPb "github.com/grpc-vtb/internal/user/proto"
 	"github.com/grpc-vtb/pkg/cert"
 )
 
 // TODO: Вынести в конфиги
-
 
 // const (
 //     keycloakPublicKey = 'keycloakKey' TODO: Вынести в конфиги
@@ -67,6 +66,7 @@ const (
 	serverKeyFile    = "./cert/gatewayService/keyFile.pem"
 	CACertFile = "./cert/ca-cert.pem"
     CACertKey = "./cert/ca-key.pem"
+	secretKey = "key"
   
 )
 
@@ -91,6 +91,8 @@ func main() {
 
 	serverOpts := []grpc.ServerOption{}
 
+	// Вот эта вся конструкция должна будет норм работать когда будет имплементация с кейклоком
+
 
     //Здесь создайте gRPC клиентов для AuthService и UserService
     // authConn, err := grpc.Dial("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -98,7 +100,12 @@ func main() {
     //     log.Fatalf("did not connect: %v", err)
     // }
     // defer authConn.Close()
-    // authClient := auth.NewAuthServiceClient(authConn)
+    // authClient := authPb.NewAuthServiceClient(authConn)
+
+
+
+
+	// А вот эту я пока не трогала
 
     // userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
     // if err != nil {
@@ -112,15 +119,16 @@ func main() {
 		serverOpts = append(serverOpts, grpc.Creds(creds))
 	}
 
-	// Задел для проверки jwt
-	// serverOpts = append(serverOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-	//     jwtInterceptor.JWTInterceptor(secretKey),
+	//Это будет иметь смысл когда появятся коннекты с модулями проверки токенов
+
+	// serverOpts = append(serverOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer( 
+	//     jwtInterceptor.JWTInterceptor(authClient),		
 	// )))
 
 	srv := grpc.NewServer(serverOpts...)
 
 	pb.RegisterQuoteServiceServer(srv, &server{})
-    // gateway.RegisterGatewayServiceServer(srv, &server{
+    // gateway.RegisterGatewayServiceServer(srv, &server{            //Это будет иметь смысл когда появятся коннекты с модулями
     //     authClient: authClient,
     //     userClient: userClient,
     // })
