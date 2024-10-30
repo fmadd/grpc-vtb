@@ -2,42 +2,65 @@ package jwtInterceptor
 
 import (
 	"context"
-	"fmt"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-
-	"github.com/dgrijalva/jwt-go"
+    authPb "github.com/grpc-vtb/internal/auth/proto"
 )
 
-// перехватчик для проверки JWT токенов
-func JWTInterceptor(secret string) grpc.UnaryServerInterceptor {
-    return func(ctx context.Context, req interface{},
-        info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+//JWT интерсептор с валидацией токенов
+func JWTInterceptor(authClient authPb.AuthServiceClient) grpc.UnaryServerInterceptor {
+    return func(
+        ctx context.Context,
+        req interface{},
+        info *grpc.UnaryServerInfo,
+        handler grpc.UnaryHandler,
+    ) (interface{}, error) {
+        // Проверка, является ли это методом аутентификации или регистрации
+        if isPublicEndpoint(info.FullMethod) {
+            // Пропускаем проверку токена для публичных точек
+            return handler(ctx, req)
+        }
 
+        // Извлечение токена из метаданных
         md, ok := metadata.FromIncomingContext(ctx)
         if !ok {
-            return nil, status.Error(codes.Unauthenticated, "no metadata in context")
+            return nil, status.Errorf(codes.Unauthenticated, "missing metadata")
         }
 
-        tokens := md["authorization"]
-        if len(tokens) == 0 {
-            return nil, status.Error(codes.Unauthenticated, "missing authorization token")
+        token := md["authorization"]
+        if len(token) == 0 || !strings.HasPrefix(token[0], "Bearer ") {
+            return nil, status.Errorf(codes.Unauthenticated, "authorization token is not supplied")
         }
-        tokenString := tokens[0][7:] 
+        tokenString := token[0][7:]
 
-        token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-            if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-                return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-            }
-            return []byte(secret), nil 
-        })
-
-        if err != nil || !token.Valid {
-            return nil, status.Error(codes.Unauthenticated, "invalid token")
+        request := &authPb.TokenRequest{AccessToken: tokenString}
+        // Проверка валидности токена
+        isValid, err := authClient.ValidateToken(context.Background(), request)
+        if err != nil || !isValid.authorized {
+            return nil, status.Errorf(codes.Unauthenticated, "invalid token: %v", err)
         }
+
+        // Вызов обработчика
         return handler(ctx, req)
     }
+}
+
+// Функция для определения, является ли метод публичным
+func isPublicEndpoint(fullMethod string) bool {
+    publicEndpoints := []string{
+        "/auth.AuthService/ValidateToken",
+        "/auth.AuthService/Login",
+        "/user.UserService/CreateUser",
+    }
+
+    for _, endpoint := range publicEndpoints {
+        if strings.EqualFold(fullMethod, endpoint) {
+            return true
+        }
+    }
+    return false
 }
