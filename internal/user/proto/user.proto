@@ -22,6 +22,8 @@ message CreateUserRequest {
 // Response message for CreateUser
 message CreateUserResponse {
   int64 id = 1;
+  string accessToken = 2;
+  int64 expiresIn = 3;
 }
 
 // Request message for GetUserByID
@@ -54,9 +56,30 @@ message DeleteUserResponse {
   bool success = 1;
 }
 
+message UserLoginRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message UserLoginResponse {
+  string accessToken = 1;
+  int64 expiresIn = 2;
+}
+
+message TokenRequest {
+  string accessToken = 1;
+}
+
+message RoleResponse {
+  string role = 1;
+}
+
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
   rpc GetUserByID(GetUserByIDRequest) returns (GetUserByIDResponse);
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+  rpc LoginUser(UserLoginRequest) returns (UserLoginResponse);
+  rpc ValidateUser (TokenRequest) returns (RoleResponse);
 }
