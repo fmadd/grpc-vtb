@@ -8,8 +8,9 @@ import (
 )
 
 type UserHandler struct {
-	authClient authProto.AuthServiceClient
-	userDB     UserDatabase
+	AuthClient authProto.AuthServiceClient
+	userProto.UnimplementedUserServiceServer
+	//userDB     UserDatabase
 }
 
 type UserDatabase interface {
@@ -19,12 +20,12 @@ type UserDatabase interface {
 	DeleteUser(ctx context.Context, userID int64) error
 }
 
-func (h *UserHandler) Register(ctx context.Context, req *userProto.CreateUserRequest) (*userProto.CreateUserResponse, error) {
+func (h *UserHandler) CreateUser(ctx context.Context, req *userProto.CreateUserRequest) (*userProto.CreateUserResponse, error) {
 	if req.Password == "" {
 		return nil, fmt.Errorf("password cannot be empty")
 	}
 
-	tokenResponse, err := h.authClient.RegisterUser(ctx, &authProto.RegisterUserRequest{
+	tokenResponse, err := h.AuthClient.RegisterUser(ctx, &authProto.RegisterUserRequest{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -47,8 +48,8 @@ func (h *UserHandler) Register(ctx context.Context, req *userProto.CreateUserReq
 	}, nil
 }
 
-func (h *UserHandler) Login(ctx context.Context, req *userProto.UserLoginRequest) (*userProto.UserLoginResponse, error) {
-	tokenResponse, err := h.authClient.Login(ctx, &authProto.UserAuth{
+func (h *UserHandler) LoginUser(ctx context.Context, req *userProto.UserLoginRequest) (*userProto.UserLoginResponse, error) {
+	tokenResponse, err := h.AuthClient.Login(ctx, &authProto.UserAuth{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -63,8 +64,8 @@ func (h *UserHandler) Login(ctx context.Context, req *userProto.UserLoginRequest
 	}, nil
 }
 
-func (h *UserHandler) ValidateToken(ctx context.Context, req *userProto.TokenRequest) (*userProto.RoleResponse, error) {
-	roleResponse, err := h.authClient.ValidateToken(ctx, &authProto.TokenRequest{
+func (h *UserHandler) ValidateUser(ctx context.Context, req *userProto.TokenRequest) (*userProto.RoleResponse, error) {
+	roleResponse, err := h.AuthClient.ValidateToken(ctx, &authProto.TokenRequest{
 		AccessToken: req.AccessToken,
 	})
 	if err != nil {
