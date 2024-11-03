@@ -14,6 +14,7 @@ type AuthHandler struct {
 	realm        string
 	clientID     string
 	clientSecret string
+	proto.UnimplementedAuthServiceServer
 }
 
 func NewAuthHandler(client *gocloak.GoCloak, realm, clientID, clientSecret string) *AuthHandler {
@@ -62,8 +63,10 @@ func (h *AuthHandler) ValidateToken(ctx context.Context, req *proto.TokenRequest
 	return &proto.RoleResponse{Role: role}, nil
 }
 
-func (h *AuthHandler) Register(ctx context.Context, req *proto.RegisterUserRequest) (*proto.TokenResponse, error) {
+func (h *AuthHandler) RegisterUser(ctx context.Context, req *proto.RegisterUserRequest) (*proto.TokenResponse, error) {
+	log.Printf("Attempting to login as clientID: %s, clientSecret: %s, realm: %s", h.clientID, h.clientSecret, h.realm)
 	adminToken, err := h.client.LoginClient(ctx, h.clientID, h.clientSecret, h.realm)
+	log.Printf("admin token: %s", adminToken.AccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error to get admin token: %v", err)
 	}
@@ -78,13 +81,14 @@ func (h *AuthHandler) Register(ctx context.Context, req *proto.RegisterUserReque
 	if err != nil {
 		return nil, fmt.Errorf("error to register user: %v", err)
 	}
+	log.Printf("Setting password for realm: %s", h.realm)
 
-	err = h.client.SetPassword(ctx, adminToken.AccessToken, h.realm, userID, req.Password, false)
+	err = h.client.SetPassword(ctx, adminToken.AccessToken, userID, h.realm, req.Password, false)
 	if err != nil {
 		return nil, fmt.Errorf("error to set pass: %v", err)
 	}
 
-	userToken, err := h.client.Login(ctx, h.realm, h.clientID, h.clientSecret, req.Username, req.Password)
+	userToken, err := h.client.Login(ctx, h.clientID, h.clientSecret, h.realm, req.Username, req.Password)
 	if err != nil {
 		return nil, fmt.Errorf("error to get user token: %v", err)
 	}

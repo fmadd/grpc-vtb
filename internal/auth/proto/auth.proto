@@ -26,8 +26,10 @@ message TokenResponse {
 }
 
 message RoleResponse {
-  string role = 1;
+  string role = 1;         // пока только "registered" или "guest"
+  bool authorized = 2;     // true, если пользователь зарегистрирован
 }
+
 
 service AuthService {
   rpc Login (UserAuth) returns (TokenResponse);
