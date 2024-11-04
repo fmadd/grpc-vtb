@@ -1,7 +1,7 @@
 package main
 
 import (
-	authProto "github.com/grpc-vtb/internal/auth/proto"
+	"github.com/grpc-vtb/internal/auth/proto"
 	"github.com/grpc-vtb/internal/user/handler"
 	userProto "github.com/grpc-vtb/internal/user/proto"
 	"google.golang.org/grpc"
@@ -18,7 +18,7 @@ func main() {
 	}
 	defer authConn.Close()
 
-	authClient := authProto.NewAuthServiceClient(authConn)
+	authClient := proto.NewAuthServiceClient(authConn)
 
 	// Создаем gRPC сервер для UserHandler
 	srv := grpc.NewServer()

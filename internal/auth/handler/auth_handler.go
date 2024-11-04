@@ -34,8 +34,9 @@ func (h *AuthHandler) Login(ctx context.Context, req *proto.UserAuth) (*proto.To
 	}
 
 	return &proto.TokenResponse{
-		AccessToken: token.AccessToken,
-		ExpiresIn:   int64(token.ExpiresIn),
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		ExpiresIn:    int64(token.ExpiresIn),
 	}, nil
 }
 
@@ -96,5 +97,17 @@ func (h *AuthHandler) RegisterUser(ctx context.Context, req *proto.RegisterUserR
 	return &proto.TokenResponse{
 		AccessToken: userToken.AccessToken,
 		ExpiresIn:   int64(userToken.ExpiresIn),
+	}, nil
+}
+
+func (h *AuthHandler) RefreshToken(ctx context.Context, req *proto.RefreshTokenRequest) (*proto.TokenResponse, error) {
+	token, err := h.client.RefreshToken(ctx, req.RefreshToken, h.clientID, h.clientSecret, h.realm)
+	if err != nil {
+		return nil, fmt.Errorf("failed to refresh token: %v clientToken: %s", err, req.RefreshToken)
+	}
+
+	return &proto.TokenResponse{
+		AccessToken: token.AccessToken,
+		ExpiresIn:   int64(token.ExpiresIn),
 	}, nil
 }

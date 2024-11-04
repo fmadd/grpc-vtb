@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/grpc-vtb/internal/auth/proto"
 	"log"
 	"time"
 
-	authProto "github.com/grpc-vtb/internal/auth/proto"
 	"google.golang.org/grpc"
 )
 
@@ -16,12 +16,12 @@ func main() {
 	}
 	defer conn.Close()
 
-	client := authProto.NewAuthServiceClient(conn)
+	client := proto.NewAuthServiceClient(conn)
 
 	// Вызов метода RegisterUser
-	resp, err := client.RegisterUser(context.Background(), &authProto.RegisterUserRequest{
+	resp, err := client.RegisterUser(context.Background(), &proto.RegisterUserRequest{
 		Username: "pudge",
-		Email:    "test@example.com",
+		Email:    "test123@example.com",
 		Password: "securepassword",
 	})
 	if err != nil {
@@ -30,24 +30,44 @@ func main() {
 
 	log.Printf("Registration successful: AccessToken=%s, ExpiresIn=%d", resp.AccessToken, resp.ExpiresIn)
 
-	resp2, err := client.Login(context.Background(), &authProto.UserAuth{
+	// Логин для получения текущего токена доступа и токена обновления
+	loginResp, err := client.Login(context.Background(), &proto.UserAuth{
 		Username: "pudge",
-		Email:    "test@example.com",
 		Password: "securepassword",
 	})
 	if err != nil {
 		log.Fatalf("Failed to login user: %v", err)
-	} else {
-		log.Printf("token: %v", resp2.AccessToken)
 	}
+	log.Printf("Current Access Token: %s", loginResp.AccessToken)
+	log.Printf("Refresh Token: %s", loginResp.RefreshToken)
 
-	resp3, err := client.ValidateToken(context.Background(), &authProto.TokenRequest{
-		AccessToken: resp2.AccessToken,
+	// Проверка текущего токена с помощью метода ValidateToken
+	validateResp, err := client.ValidateToken(context.Background(), &proto.TokenRequest{
+		AccessToken: loginResp.AccessToken,
 	})
 	if err != nil {
 		log.Fatalf("Failed to validate token: %v", err)
 	} else {
-		log.Fatalf("Role: %v", resp3.Role)
+		log.Printf("Role: %v", validateResp.Role)
+
 	}
 
+	// Вызов метода RefreshToken для обновления токена
+	refreshResp, err := client.RefreshToken(context.Background(), &proto.RefreshTokenRequest{
+		RefreshToken: loginResp.RefreshToken, // Здесь используем текущий токен обновления
+	})
+	if err != nil {
+		log.Fatalf("Failed to refresh token: %v", err)
+	}
+	log.Printf("New Access Token: %s, Expires In: %d", refreshResp.AccessToken, refreshResp.ExpiresIn)
+
+	// Проверка нового токена после обновления
+	newValidateResp, err := client.ValidateToken(context.Background(), &proto.TokenRequest{
+		AccessToken: refreshResp.AccessToken,
+	})
+	if err != nil {
+		log.Fatalf("Failed to validate new token: %v", err)
+	} else {
+		log.Printf("Role after refresh: %v", newValidateResp.Role)
+	}
 }
