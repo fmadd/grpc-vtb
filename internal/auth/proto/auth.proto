@@ -22,17 +22,21 @@ message TokenRequest {
 
 message TokenResponse {
   string accessToken = 1;
-  int64 expiresIn = 2;
+  string refreshToken = 2;
+  int64 expiresIn = 3;
 }
 
 message RoleResponse {
-  string role = 1;         // пока только "registered" или "guest"
+  string role = 1;       // пока только "registered" или "guest"
   bool authorized = 2;     // true, если пользователь зарегистрирован
 }
-
+message RefreshTokenRequest {
+  string refreshToken = 1;
+}
 
 service AuthService {
   rpc Login (UserAuth) returns (TokenResponse);
   rpc ValidateToken (TokenRequest) returns (RoleResponse);
   rpc RegisterUser (RegisterUserRequest) returns (TokenResponse);
+  rpc RefreshToken (RefreshTokenRequest) returns (TokenResponse);
 }
