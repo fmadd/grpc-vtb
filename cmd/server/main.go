@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/grpc-vtb/internal/auth/proto"
 	"log"
 	"net"
 
@@ -13,7 +14,6 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
-	authPb "github.com/grpc-vtb/internal/auth/proto"
 	_ "github.com/grpc-vtb/internal/interceptors/jwtInterceptor"
 	userPb "github.com/grpc-vtb/internal/user/proto"
 	"github.com/grpc-vtb/pkg/cert"
@@ -27,10 +27,9 @@ import (
 
 type server struct {
 	pb.UnimplementedQuoteServiceServer
-    authClient authPb.AuthServiceClient
-    userClient userPb.UserServiceClient
+	authClient proto.AuthServiceClient
+	userClient userPb.UserServiceClient
 }
-
 
 // func (s *server) Authenticate(ctx context.Context, req *gateway.AuthRequest) (*gateway.AuthResponse, error) {
 //     // Перенаправление запроса к AuthService
@@ -62,14 +61,12 @@ func (s *server) GetQuote(ctx context.Context, req *pb.QuoteRequest) (*pb.QuoteR
 }
 
 const (
-	serverCertFile   = "./cert/gatewayService/certFile.pem"
-	serverKeyFile    = "./cert/gatewayService/keyFile.pem"
-	CACertFile = "./cert/ca-cert.pem"
-    CACertKey = "./cert/ca-key.pem"
-	secretKey = "key"
-  
+	serverCertFile = "./cert/gatewayService/certFile.pem"
+	serverKeyFile  = "./cert/gatewayService/keyFile.pem"
+	CACertFile     = "./cert/ca-cert.pem"
+	CACertKey      = "./cert/ca-key.pem"
+	secretKey      = "key"
 )
-
 
 func main() {
 	tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
@@ -79,11 +76,11 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(serverCertFile , serverKeyFile)
+		err = cert.GenerateCertificate(serverCertFile, serverKeyFile)
 		if err != nil {
 			log.Fatalf("error generating certificate: %s", err)
 		}
-		creds, err = cert.LoadServerTLSCredentials(serverCertFile , serverKeyFile)
+		creds, err = cert.LoadServerTLSCredentials(serverCertFile, serverKeyFile)
 		if err != nil {
 			log.Fatalf("failed to load key pair: %v", err)
 		}
@@ -93,27 +90,22 @@ func main() {
 
 	// Вот эта вся конструкция должна будет норм работать когда будет имплементация с кейклоком
 
-
-    //Здесь создайте gRPC клиентов для AuthService и UserService
-    // authConn, err := grpc.Dial("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
-    // if err != nil {
-    //     log.Fatalf("did not connect: %v", err)
-    // }
-    // defer authConn.Close()
-    // authClient := authPb.NewAuthServiceClient(authConn)
-
-
-
+	//Здесь создайте gRPC клиентов для AuthService и UserService
+	// authConn, err := grpc.Dial("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// if err != nil {
+	//     log.Fatalf("did not connect: %v", err)
+	// }
+	// defer authConn.Close()
+	// authClient := authPb.NewAuthServiceClient(authConn)
 
 	// А вот эту я пока не трогала
 
-    // userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
-    // if err != nil {
-    //     log.Fatalf("did not connect: %v", err)
-    // }
-    // defer userConn.Close()
-    // userClient := user.NewUserServiceClient(userConn)
-
+	// userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// if err != nil {
+	//     log.Fatalf("did not connect: %v", err)
+	// }
+	// defer userConn.Close()
+	// userClient := user.NewUserServiceClient(userConn)
 
 	if *tlsEnabled {
 		serverOpts = append(serverOpts, grpc.Creds(creds))
@@ -121,17 +113,17 @@ func main() {
 
 	//Это будет иметь смысл когда появятся коннекты с модулями проверки токенов
 
-	// serverOpts = append(serverOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer( 
-	//     jwtInterceptor.JWTInterceptor(authClient),		
+	// serverOpts = append(serverOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+	//     jwtInterceptor.JWTInterceptor(authClient),
 	// )))
 
 	srv := grpc.NewServer(serverOpts...)
 
 	pb.RegisterQuoteServiceServer(srv, &server{})
-    // gateway.RegisterGatewayServiceServer(srv, &server{            //Это будет иметь смысл когда появятся коннекты с модулями
-    //     authClient: authClient,
-    //     userClient: userClient,
-    // })
+	// gateway.RegisterGatewayServiceServer(srv, &server{            //Это будет иметь смысл когда появятся коннекты с модулями
+	//     authClient: authClient,
+	//     userClient: userClient,
+	// })
 
 	reflection.Register(srv)
 

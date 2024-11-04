@@ -3,12 +3,12 @@ package handler
 import (
 	"context"
 	"fmt"
-	authProto "github.com/grpc-vtb/internal/auth/proto"
+	"github.com/grpc-vtb/internal/auth/proto"
 	userProto "github.com/grpc-vtb/internal/user/proto"
 )
 
 type UserHandler struct {
-	AuthClient authProto.AuthServiceClient
+	AuthClient proto.AuthServiceClient
 	userProto.UnimplementedUserServiceServer
 	//userDB     UserDatabase
 }
@@ -25,7 +25,7 @@ func (h *UserHandler) CreateUser(ctx context.Context, req *userProto.CreateUserR
 		return nil, fmt.Errorf("password cannot be empty")
 	}
 
-	tokenResponse, err := h.AuthClient.RegisterUser(ctx, &authProto.RegisterUserRequest{
+	tokenResponse, err := h.AuthClient.RegisterUser(ctx, &proto.RegisterUserRequest{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -49,7 +49,7 @@ func (h *UserHandler) CreateUser(ctx context.Context, req *userProto.CreateUserR
 }
 
 func (h *UserHandler) LoginUser(ctx context.Context, req *userProto.UserLoginRequest) (*userProto.UserLoginResponse, error) {
-	tokenResponse, err := h.AuthClient.Login(ctx, &authProto.UserAuth{
+	tokenResponse, err := h.AuthClient.Login(ctx, &proto.UserAuth{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -65,7 +65,7 @@ func (h *UserHandler) LoginUser(ctx context.Context, req *userProto.UserLoginReq
 }
 
 func (h *UserHandler) ValidateUser(ctx context.Context, req *userProto.TokenRequest) (*userProto.RoleResponse, error) {
-	roleResponse, err := h.AuthClient.ValidateToken(ctx, &authProto.TokenRequest{
+	roleResponse, err := h.AuthClient.ValidateToken(ctx, &proto.TokenRequest{
 		AccessToken: req.AccessToken,
 	})
 	if err != nil {
