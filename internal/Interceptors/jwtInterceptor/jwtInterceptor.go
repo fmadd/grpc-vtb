@@ -2,13 +2,14 @@ package jwtInterceptor
 
 import (
 	"context"
-	"github.com/grpc-vtb/internal/auth/proto/internal/auth/proto"
+
 	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"github.com/grpc-vtb/internal/auth/proto"
 )
 
 // JWT интерсептор с валидацией токенов
@@ -40,7 +41,7 @@ func JWTInterceptor(authClient proto.AuthServiceClient) grpc.UnaryServerIntercep
 		request := &proto.TokenRequest{AccessToken: tokenString}
 		// Проверка валидности токена
 		isValid, err := authClient.ValidateToken(context.Background(), request)
-		if err != nil || !isValid.authorized {
+		if err != nil || !isValid.Authorized {
 			return nil, status.Errorf(codes.Unauthenticated, "invalid token: %v", err)
 		}
 

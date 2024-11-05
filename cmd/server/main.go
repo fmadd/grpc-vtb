@@ -6,7 +6,7 @@ import (
 	"github.com/grpc-vtb/internal/auth/proto"
 	"log"
 	"net"
-
+	_ "github.com/grpc-vtb/internal/Interceptors/jwtInterceptor"
 	_ "github.com/grpc-ecosystem/go-grpc-middleware"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
-	_ "github.com/grpc-vtb/internal/interceptors/jwtInterceptor"
 	userPb "github.com/grpc-vtb/internal/user/proto"
 	"github.com/grpc-vtb/pkg/cert"
 )
