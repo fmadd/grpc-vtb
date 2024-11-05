@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func main() {
+func startClient() {
 	conn, err := grpc.Dial("localhost:8081", grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
 	if err != nil {
 		log.Fatalf("Did not connect: %v", err)

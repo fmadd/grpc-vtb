@@ -1,4 +1,4 @@
-package main
+package user
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-func main() {
+func startClient() {
 	conn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Не удалось подключиться к User-серверу: %v", err)
