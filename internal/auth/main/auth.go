@@ -2,7 +2,8 @@ package auth
 
 import (
 	"github.com/grpc-vtb/internal/auth/proto"
-	"log"
+	"github.com/grpc-vtb/internal/logger"
+	"go.uber.org/zap"
 	"net"
 
 	"github.com/Nerzal/gocloak/v13"
@@ -13,7 +14,7 @@ import (
 func main() {
 	lis, err := net.Listen("tcp", ":8081")
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		logger.Logger.Fatal("Failed to listen", zap.Error(err))
 	}
 
 	client := gocloak.NewClient("http://localhost:8080")
@@ -22,8 +23,8 @@ func main() {
 	grpcServer := grpc.NewServer()
 	proto.RegisterAuthServiceServer(grpcServer, authService)
 
-	log.Println("Starting auth server on :8081...")
+	logger.Logger.Info("Starting auth server on :8081...")
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
+		logger.Logger.Fatal("Failed to serve", zap.Error(err))
 	}
 }

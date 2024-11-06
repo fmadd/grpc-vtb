@@ -3,15 +3,16 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/grpc-vtb/internal/auth/proto"
-	"log"
-	"net"
-	_ "github.com/grpc-vtb/internal/Interceptors/jwtInterceptor"
 	_ "github.com/grpc-ecosystem/go-grpc-middleware"
+	_ "github.com/grpc-vtb/internal/Interceptors/jwtInterceptor"
+	"github.com/grpc-vtb/internal/auth/proto"
+	"github.com/grpc-vtb/internal/logger"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	_ "google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
+	"net"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
 	userPb "github.com/grpc-vtb/internal/user/proto"
@@ -77,11 +78,11 @@ func main() {
 	if *tlsEnabled {
 		err = cert.GenerateCertificate(serverCertFile, serverKeyFile)
 		if err != nil {
-			log.Fatalf("error generating certificate: %s", err)
+			logger.Logger.Fatal("error generating certificate", zap.Error(err))
 		}
 		creds, err = cert.LoadServerTLSCredentials(serverCertFile, serverKeyFile)
 		if err != nil {
-			log.Fatalf("failed to load key pair: %v", err)
+			logger.Logger.Fatal("failed to load key pair", zap.Error(err))
 		}
 	}
 
@@ -92,7 +93,7 @@ func main() {
 	//Здесь создайте gRPC клиентов для AuthService и UserService
 	// authConn, err := grpc.Dial("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	// if err != nil {
-	//     log.Fatalf("did not connect: %v", err)
+	//     logger.Logger.Fatal("did not connect", zap.Error(err))
 	// }
 	// defer authConn.Close()
 	// authClient := authPb.NewAuthServiceClient(authConn)
@@ -101,7 +102,7 @@ func main() {
 
 	// userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	// if err != nil {
-	//     log.Fatalf("did not connect: %v", err)
+	//     logger.Logger.Fatal("did not connect", zap.Error(err))
 	// }
 	// defer userConn.Close()
 	// userClient := user.NewUserServiceClient(userConn)
@@ -128,11 +129,11 @@ func main() {
 
 	listener, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Logger.Fatal("failed to listen", zap.Error(err))
 	}
 
-	log.Println("Starting gRPC server on port :50051... (TLS enabled:", *tlsEnabled, ")")
+	logger.Logger.Info("Starting gRPC server on port :50051... (TLS enabled:", zap.Bool("tlsEnabled", *tlsEnabled))
 	if err := srv.Serve(listener); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		logger.Logger.Fatal("failed to serve", zap.Error(err))
 	}
 }

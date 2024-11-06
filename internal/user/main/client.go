@@ -3,16 +3,17 @@ package user
 import (
 	"context"
 	"fmt"
+	"github.com/grpc-vtb/internal/logger"
 	userProto "github.com/grpc-vtb/internal/user/proto"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"log"
 )
 
 func startClient() {
 	conn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("Не удалось подключиться к User-серверу: %v", err)
+		logger.Logger.Fatal("Failed to connect to the User server", zap.Error(err))
 	}
 	defer conn.Close()
 
@@ -24,7 +25,7 @@ func startClient() {
 		Password: "password123",
 	})
 	if err != nil {
-		log.Fatalf("Ошибка при регистрации: %v", err)
+		logger.Logger.Fatal("Registration error", zap.Error(err))
 	}
 	fmt.Printf("Register response: %v\n", registerResponse)
 
@@ -34,7 +35,7 @@ func startClient() {
 		Password: "password123",
 	})
 	if err != nil {
-		log.Fatalf("Ошибка при входе: %v", err)
+		logger.Logger.Fatal("Login error", zap.Error(err))
 	}
 	fmt.Printf("Login response: %v\n", loginResponse)
 
@@ -43,7 +44,7 @@ func startClient() {
 		AccessToken: loginResponse.AccessToken,
 	})
 	if err != nil {
-		log.Fatalf("Ошибка при проверке токена: %v", err)
+		logger.Logger.Fatal("Error checking the token", zap.Error(err))
 	}
 	fmt.Printf("ValidateToken response: %v\n", validateResponse)
 }

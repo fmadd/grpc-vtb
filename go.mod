@@ -7,6 +7,7 @@ require google.golang.org/grpc v1.67.1
 require (
 	github.com/Nerzal/gocloak/v13 v13.9.0
 	github.com/golang/protobuf v1.5.4
+	go.uber.org/zap v1.18.1
 )
 
 require (
@@ -15,7 +16,8 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
 )
 
 require (

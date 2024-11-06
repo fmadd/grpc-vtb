@@ -2,11 +2,12 @@ package user
 
 import (
 	"github.com/grpc-vtb/internal/auth/proto"
+	"github.com/grpc-vtb/internal/logger"
 	"github.com/grpc-vtb/internal/user/handler"
 	userProto "github.com/grpc-vtb/internal/user/proto"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"log"
 	"net"
 )
 
@@ -14,7 +15,7 @@ func main() {
 	// Подключаемся к auth gRPC-серверу
 	authConn, err := grpc.Dial("localhost:8081", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("Не удалось подключиться к auth-серверу: %v", err)
+		logger.Logger.Fatal("Failed to connect to the auth server", zap.Error(err))
 	}
 	defer authConn.Close()
 
@@ -33,11 +34,11 @@ func main() {
 	// Запускаем gRPC сервер
 	lis, err := net.Listen("tcp", ":50053") // Порт для UserService
 	if err != nil {
-		log.Fatalf("Не удалось начать прослушивание: %v", err)
+		logger.Logger.Fatal("Failed to start listening", zap.Error(err))
 	}
 
-	log.Println("Запуск User gRPC сервера на порту 50051...")
+	logger.Logger.Info("Starting the User gRPC server on port 50051...")
 	if err := srv.Serve(lis); err != nil {
-		log.Fatalf("Не удалось запустить сервер: %v", err)
+		logger.Logger.Fatal("The server could not be started", zap.Error(err))
 	}
 }
