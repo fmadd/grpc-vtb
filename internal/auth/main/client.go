@@ -3,7 +3,8 @@ package auth
 import (
 	"context"
 	"github.com/grpc-vtb/internal/auth/proto"
-	"log"
+	"github.com/grpc-vtb/internal/logger"
+	"go.uber.org/zap"
 	"time"
 
 	"google.golang.org/grpc"
@@ -12,7 +13,7 @@ import (
 func startClient() {
 	conn, err := grpc.Dial("localhost:8081", grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
 	if err != nil {
-		log.Fatalf("Did not connect: %v", err)
+		logger.Logger.Fatal("Did not connect", zap.Error(err))
 	}
 	defer conn.Close()
 
@@ -25,10 +26,10 @@ func startClient() {
 		Password: "securepassword",
 	})
 	if err != nil {
-		log.Fatalf("Failed to register user: %v", err)
+		logger.Logger.Fatal("Failed to register user", zap.Error(err))
 	}
 
-	log.Printf("Registration successful: AccessToken=%s, ExpiresIn=%d", resp.AccessToken, resp.ExpiresIn)
+	logger.Logger.Info("Registration successful", zap.String("AccessToken", resp.AccessToken), zap.Int64("ExpiresIn", resp.ExpiresIn))
 
 	// Логин для получения текущего токена доступа и токена обновления
 	loginResp, err := client.Login(context.Background(), &proto.UserAuth{
@@ -36,20 +37,19 @@ func startClient() {
 		Password: "securepassword",
 	})
 	if err != nil {
-		log.Fatalf("Failed to login user: %v", err)
+		logger.Logger.Fatal("Failed to login user", zap.Error(err))
 	}
-	log.Printf("Current Access Token: %s", loginResp.AccessToken)
-	log.Printf("Refresh Token: %s", loginResp.RefreshToken)
+	logger.Logger.Info("Current Access Token", zap.String("AccessToken", loginResp.AccessToken))
+	logger.Logger.Info("Refresh Token", zap.String("RefreshToken", loginResp.RefreshToken))
 
 	// Проверка текущего токена с помощью метода ValidateToken
 	validateResp, err := client.ValidateToken(context.Background(), &proto.TokenRequest{
 		AccessToken: loginResp.AccessToken,
 	})
 	if err != nil {
-		log.Fatalf("Failed to validate token: %v", err)
+		logger.Logger.Fatal("Failed to validate token", zap.Error(err))
 	} else {
-		log.Printf("Role: %v", validateResp.Role)
-
+		logger.Logger.Info("Role", zap.String("Role", validateResp.Role))
 	}
 
 	// Вызов метода RefreshToken для обновления токена
@@ -57,17 +57,17 @@ func startClient() {
 		RefreshToken: loginResp.RefreshToken, // Здесь используем текущий токен обновления
 	})
 	if err != nil {
-		log.Fatalf("Failed to refresh token: %v", err)
+		logger.Logger.Fatal("Failed to refresh token", zap.Error(err))
 	}
-	log.Printf("New Access Token: %s, Expires In: %d", refreshResp.AccessToken, refreshResp.ExpiresIn)
+	logger.Logger.Info("New Access Token", zap.String("AccessToken", refreshResp.AccessToken), zap.Int64("ExpiresIn", refreshResp.ExpiresIn))
 
 	// Проверка нового токена после обновления
 	newValidateResp, err := client.ValidateToken(context.Background(), &proto.TokenRequest{
 		AccessToken: refreshResp.AccessToken,
 	})
 	if err != nil {
-		log.Fatalf("Failed to validate new token: %v", err)
+		logger.Logger.Fatal("Failed to validate new token", zap.Error(err))
 	} else {
-		log.Printf("Role after refresh: %v", newValidateResp.Role)
+		logger.Logger.Info("Role after refresh", zap.String("Role", newValidateResp.Role))
 	}
 }

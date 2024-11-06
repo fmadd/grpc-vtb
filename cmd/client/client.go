@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
+	"github.com/grpc-vtb/internal/logger"
+	"go.uber.org/zap"
 	"time"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
@@ -14,58 +15,58 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	_ "google.golang.org/grpc/metadata"
 )
+
 const (
 	CACertFile = "./cert/ca-cert.pem"
-    CACertKey = "./cert/ca-key.pem"
-    JwtToken = "token_example"
+	CACertKey  = "./cert/ca-key.pem"
+	JwtToken   = "token_example"
 )
 const (
-	clientCertFile   = "./cert/client/certFile.pem"
-	clientKeyFile    =  "./cert/client/keyFile.pem"
+	clientCertFile = "./cert/client/certFile.pem"
+	clientKeyFile  = "./cert/client/keyFile.pem"
 )
 
-
 func main() {
-    
-    tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
-    flag.Parse()
 
-    var creds credentials.TransportCredentials
-    var err error
+	tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
+	flag.Parse()
 
-    if *tlsEnabled {
-        cert.GenerateCertificate(clientCertFile, clientKeyFile)
-        creds, err = cert.LoadClientTLSCredentials(clientCertFile, clientKeyFile)
-        if err != nil {
-            log.Fatalf("failed to create TLS credentials: %v", err)
-        }
-    }
+	var creds credentials.TransportCredentials
+	var err error
 
-    var conn *grpc.ClientConn
-    if *tlsEnabled {
-        conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds))
-    } else {
-        conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
-    }
+	if *tlsEnabled {
+		cert.GenerateCertificate(clientCertFile, clientKeyFile)
+		creds, err = cert.LoadClientTLSCredentials(clientCertFile, clientKeyFile)
+		if err != nil {
+			logger.Logger.Fatal("failed to create TLS credentials", zap.Error(err))
+		}
+	}
 
-    if err != nil {
-        log.Fatalf("did not connect: %v", err)
-    }
-    defer conn.Close()
+	var conn *grpc.ClientConn
+	if *tlsEnabled {
+		conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds))
+	} else {
+		conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
 
-    client := pb.NewQuoteServiceClient(conn)
+	if err != nil {
+		logger.Logger.Fatal("did not connect", zap.Error(err))
+	}
+	defer conn.Close()
 
-    ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-    defer cancel()
+	client := pb.NewQuoteServiceClient(conn)
 
-    // Задел для использования jwt токенов от клиента
-    // ctx = metadata.NewOutgoingContext(context.Background(), metadata.Pairs("authorization", "Bearer "+ JwtToken ))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 
-    req := &pb.QuoteRequest{Category: "inspiration"}
-    res, err := client.GetQuote(ctx, req)
-    if err != nil {
-        log.Fatalf("could not get quote: %v", err)
-    }
+	// Задел для использования jwt токенов от клиента
+	// ctx = metadata.NewOutgoingContext(context.Background(), metadata.Pairs("authorization", "Bearer "+ JwtToken ))
 
-    log.Printf("Quote: %s", res.Quote)
+	req := &pb.QuoteRequest{Category: "inspiration"}
+	res, err := client.GetQuote(ctx, req)
+	if err != nil {
+		logger.Logger.Fatal("could not get quote", zap.Error(err))
+	}
+
+	logger.Logger.Info("Quote", zap.String("Quote", res.Quote))
 }

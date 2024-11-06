@@ -2,7 +2,8 @@ package logInterceptor
 
 import (
 	"context"
-	"log"
+	"github.com/grpc-vtb/internal/logger"
+	"go.uber.org/zap"
 	"time"
 
 	"google.golang.org/grpc"
@@ -16,11 +17,13 @@ func LogInterceptor(
 ) (interface{}, error) {
 	start := time.Now()
 
-	log.Printf("Received request: %s, with payload: %v", info.FullMethod, req)
+	logger.Logger.Info("Received request", zap.String("method", info.FullMethod), zap.Any("payload", req))
 
 	resp, err := handler(ctx, req)
 
-	log.Printf("Response for request: %s, duration: %s, error: %v", info.FullMethod, time.Since(start), err)
-
+	logger.Logger.Info("Response for request",
+		zap.String("method", info.FullMethod),
+		zap.Duration("duration", time.Since(start)),
+		zap.Error(err))
 	return resp, err
 }

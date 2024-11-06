@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/grpc-vtb/internal/auth/proto"
-	"log"
+	"github.com/grpc-vtb/internal/logger"
+	"go.uber.org/zap"
 )
 
 type AuthHandler struct {
@@ -29,7 +30,7 @@ func NewAuthHandler(client *gocloak.GoCloak, realm, clientID, clientSecret strin
 func (h *AuthHandler) Login(ctx context.Context, req *proto.UserAuth) (*proto.TokenResponse, error) {
 	token, err := h.client.Login(ctx, h.clientID, h.clientSecret, h.realm, req.Username, req.Password)
 	if err != nil {
-		log.Println("Error logging in:", err)
+		logger.Logger.Error("Error logging in:", zap.Error(err))
 		return nil, err
 	}
 
@@ -43,21 +44,24 @@ func (h *AuthHandler) Login(ctx context.Context, req *proto.UserAuth) (*proto.To
 func (h *AuthHandler) ValidateToken(ctx context.Context, req *proto.TokenRequest) (*proto.RoleResponse, error) {
 	isValid, err := h.client.RetrospectToken(ctx, req.AccessToken, h.clientID, h.clientSecret, h.realm)
 	if err != nil {
+		logger.Logger.Error("error validating token", zap.Error(err))
 		return nil, fmt.Errorf("error validating token: %v", err)
 	}
 
 	if isValid == nil || !*isValid.Active {
+		logger.Logger.Error("invalid token")
 		return nil, fmt.Errorf("invalid token")
 	}
 
 	userInfo, err := h.client.GetUserInfo(ctx, req.AccessToken, h.realm)
 	if err != nil {
-		log.Println("Error validate token:", err)
+		logger.Logger.Error("Error validate token:", zap.Error(err))
 		return nil, err
 	}
 
 	role := *userInfo.PreferredUsername
 	if role == "" {
+		logger.Logger.Error("role not found")
 		return nil, errors.New("role not found")
 	}
 
@@ -65,10 +69,11 @@ func (h *AuthHandler) ValidateToken(ctx context.Context, req *proto.TokenRequest
 }
 
 func (h *AuthHandler) RegisterUser(ctx context.Context, req *proto.RegisterUserRequest) (*proto.TokenResponse, error) {
-	log.Printf("Attempting to login as clientID: %s, clientSecret: %s, realm: %s", h.clientID, h.clientSecret, h.realm)
+	logger.Logger.Info("Attempting to login as clientID: %s, clientSecret: %s, realm: %s", zap.String("clientID", h.clientID), zap.String("clientSecret", h.clientSecret), zap.String("realm", h.realm))
 	adminToken, err := h.client.LoginClient(ctx, h.clientID, h.clientSecret, h.realm)
-	log.Printf("admin token: %s", adminToken.AccessToken)
+	logger.Logger.Info("admin token: ", zap.String("adminToken", adminToken.AccessToken))
 	if err != nil {
+		logger.Logger.Error("Error to get admin token:", zap.Error(err))
 		return nil, fmt.Errorf("error to get admin token: %v", err)
 	}
 
@@ -80,17 +85,20 @@ func (h *AuthHandler) RegisterUser(ctx context.Context, req *proto.RegisterUserR
 
 	userID, err := h.client.CreateUser(ctx, adminToken.AccessToken, h.realm, user)
 	if err != nil {
+		logger.Logger.Error("Error to register user:", zap.Error(err))
 		return nil, fmt.Errorf("error to register user: %v", err)
 	}
-	log.Printf("Setting password for realm: %s", h.realm)
+	logger.Logger.Info("Setting password for realm", zap.String("realm", h.realm))
 
 	err = h.client.SetPassword(ctx, adminToken.AccessToken, userID, h.realm, req.Password, false)
 	if err != nil {
+		logger.Logger.Error("error to set password:", zap.Error(err))
 		return nil, fmt.Errorf("error to set pass: %v", err)
 	}
 
 	userToken, err := h.client.Login(ctx, h.clientID, h.clientSecret, h.realm, req.Username, req.Password)
 	if err != nil {
+		logger.Logger.Error("error to get user token", zap.Error(err))
 		return nil, fmt.Errorf("error to get user token: %v", err)
 	}
 
@@ -103,6 +111,7 @@ func (h *AuthHandler) RegisterUser(ctx context.Context, req *proto.RegisterUserR
 func (h *AuthHandler) RefreshToken(ctx context.Context, req *proto.RefreshTokenRequest) (*proto.TokenResponse, error) {
 	token, err := h.client.RefreshToken(ctx, req.RefreshToken, h.clientID, h.clientSecret, h.realm)
 	if err != nil {
+		logger.Logger.Error("Error refreshing token:", zap.Error(err))
 		return nil, fmt.Errorf("failed to refresh token: %v clientToken: %s", err, req.RefreshToken)
 	}
 
