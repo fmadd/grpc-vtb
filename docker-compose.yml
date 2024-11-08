@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  user:
+    build: ./user
+    ports:
+      - "50053:50053"
+    volumes:
+      - ./cert:/cert
+    environment:
+      - SERVER_TLS=true
+      - CLIENT_TLS=true
+    networks:
+      - grpc-net
+
+  auth:
+    build: ./auth
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./cert:/cert
+    environment:
+      - SERVER_TLS=true
+    networks:
+      - grpc-net
+
+networks:
+  grpc-net:
+    driver: bridge
