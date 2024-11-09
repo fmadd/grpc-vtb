@@ -1,5 +1,5 @@
 gen:
-	protoc --go_out=./api/proto --go-grpc_out=./api/proto api/proto/proto/*.proto
+	protoc --go_out=./api/proto/proto --go-grpc_out=./api/proto/proto api/proto/proto/*.proto
 
 server:
 	go run cmd/server/main.go -tls=false
