@@ -1,11 +1,11 @@
-# Базовый образ
-FROM golang:1.20 as builder
+
+FROM --platform=linux/amd64 golang:1.21 as builder
 
 
 WORKDIR /app
 
 
-COPY go.mod go.sum ./
+COPY ../../go.mod ../../go.sum ./
 
 
 RUN go mod download
@@ -14,7 +14,10 @@ RUN go mod download
 COPY . .
 
 
-RUN go build -o central-grpc-server ./cmd/central_grpc_server
+RUN go build -o central-grpc-server ./cmd/server
+
+
+RUN chmod +x central-grpc-server
 
 
 FROM gcr.io/distroless/base-debian11
