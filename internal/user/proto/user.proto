@@ -12,46 +12,46 @@ message User {
   string email = 3;
 }
 
-// Request message for CreateUser
+
 message CreateUserRequest {
   string username = 1;
   string email = 2;
   string password = 3;
 }
 
-// Response message for CreateUser
+
 message CreateUserResponse {
   int64 id = 1;
   string accessToken = 2;
   int64 expiresIn = 3;
 }
 
-// Request message for GetUserByID
+
 message GetUserByIDRequest {
   int64 user_id = 1;
 }
 
-// Response message for GetUserByID
+
 message GetUserByIDResponse {
   User user = 1;
 }
 
-// Request message for UpdateUser
+
 message UpdateUserRequest {
   User user = 1;
 }
 
-// Response message for UpdateUser
+
 message UpdateUserResponse {
   bool success = 1;
 }
 
-// Request message for DeleteUser
+
 message DeleteUserRequest {
   int64 user_id = 1;
 }
 
-// Response message for DeleteUser
+
 message DeleteUserResponse {
   bool success = 1;
 }
