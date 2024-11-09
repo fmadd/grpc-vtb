@@ -3,31 +3,24 @@ package main
 import (
 	"context"
 	"flag"
+	"net"
+
 	_ "github.com/grpc-ecosystem/go-grpc-middleware"
-	_ "github.com/grpc-vtb/internal/Interceptors/jwtInterceptor"
-	"github.com/grpc-vtb/internal/auth/proto"
 	"github.com/grpc-vtb/internal/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	_ "google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-	"net"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
 	userPb "github.com/grpc-vtb/internal/user/proto"
 	"github.com/grpc-vtb/pkg/cert"
 )
 
-// TODO: Вынести в конфиги
-
-// const (
-//     keycloakPublicKey = 'keycloakKey' TODO: Вынести в конфиги
-// )
 
 type server struct {
 	pb.UnimplementedQuoteServiceServer
-	authClient proto.AuthServiceClient
 	userClient userPb.UserServiceClient
 }
 
@@ -88,42 +81,26 @@ func main() {
 
 	serverOpts := []grpc.ServerOption{}
 
-	// Вот эта вся конструкция должна будет норм работать когда будет имплементация с кейклоком
 
-	//Здесь создайте gRPC клиентов для AuthService и UserService
-	// authConn, err := grpc.Dial("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	// if err != nil {
-	//     logger.Logger.Fatal("did not connect", zap.Error(err))
-	// }
-	// defer authConn.Close()
-	// authClient := authPb.NewAuthServiceClient(authConn)
 
-	// А вот эту я пока не трогала
-
-	// userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	// if err != nil {
-	//     logger.Logger.Fatal("did not connect", zap.Error(err))
-	// }
-	// defer userConn.Close()
-	// userClient := user.NewUserServiceClient(userConn)
+	userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+	    logger.Logger.Fatal("did not connect", zap.Error(err))
+	}
+	defer userConn.Close()
+	userClient := userPb.NewUserServiceClient(userConn)
 
 	if *tlsEnabled {
 		serverOpts = append(serverOpts, grpc.Creds(creds))
 	}
 
-	//Это будет иметь смысл когда появятся коннекты с модулями проверки токенов
-
-	// serverOpts = append(serverOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-	//     jwtInterceptor.JWTInterceptor(authClient),
-	// )))
 
 	srv := grpc.NewServer(serverOpts...)
 
 	pb.RegisterQuoteServiceServer(srv, &server{})
-	// gateway.RegisterGatewayServiceServer(srv, &server{            //Это будет иметь смысл когда появятся коннекты с модулями
-	//     authClient: authClient,
-	//     userClient: userClient,
-	// })
+	gateway.RegisterGatewayServiceServer(srv, &server{            //Это будет иметь смысл когда появятся коннекты с модулями
+	    userClient: userClient,
+	})
 
 	reflection.Register(srv)
 
