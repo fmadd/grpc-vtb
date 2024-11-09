@@ -13,6 +13,7 @@ type UserHandler struct {
 	//userDB     UserDatabase
 }
 
+// Задел на бд в будущем для масштабирования проекта
 type UserDatabase interface {
 	CreateUser(ctx context.Context, username, email string) (int64, error)
 	GetUserByID(ctx context.Context, userID int64) (*userProto.User, error)

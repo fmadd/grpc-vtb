@@ -1,29 +1,47 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  user:
-    build: ./user
-    ports:
-      - "50053:50053"
-    volumes:
-      - ./cert:/cert
-    environment:
-      - SERVER_TLS=true
-      - CLIENT_TLS=true
-    networks:
-      - grpc-net
-
   auth:
-    build: ./auth
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+    environment:
+      - KEYCLOAK_URL=http://localhost:8080
+      - REALM_NAME=realm
+      - CLIENT_ID=clientid
+      - CLIENT_SECRET=clientsecret
     ports:
       - "8081:8081"
-    volumes:
-      - ./cert:/cert
-    environment:
-      - SERVER_TLS=true
     networks:
-      - grpc-net
+      - grpc-network
+
+  user:
+    build:
+      context: ./user
+      dockerfile: Dockerfile
+    depends_on:
+      - auth
+    environment:
+      - AUTH_SERVICE_URL=http://auth:8081
+    ports:
+      - "50053:50053"
+    networks:
+      - grpc-network
+
+  central-grpc-server:
+    build:
+      context: ./central_grpc_server
+      dockerfile: Dockerfile
+    depends_on:
+      - auth
+      - user
+    environment:
+      - USER_SERVICE_URL=user:50053
+    ports:
+      - "50051:50051"
+    networks:
+      - grpc-network
 
 networks:
-  grpc-net:
+  grpc-network:
     driver: bridge
