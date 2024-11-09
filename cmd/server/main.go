@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net"
 
 	_ "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -20,38 +21,60 @@ import (
 
 
 type server struct {
-	pb.UnimplementedQuoteServiceServer
+	pb.UnimplementedUserServiceServer
 	userClient userPb.UserServiceClient
 }
 
-// func (s *server) Authenticate(ctx context.Context, req *gateway.AuthRequest) (*gateway.AuthResponse, error) {
-//     // Перенаправление запроса к AuthService
-//     res, err := s.authClient.Login(ctx, &auth.LoginRequest{
-//         Username: req.Username,
-//         Password: req.Password,
-//     })
-//     if err != nil {
-//         return nil, err
-//     }
-//     return &gateway.AuthResponse{Token: res.Token}, nil
-// }
 
-// func (s *server) FetchUser(ctx context.Context, req *gateway.UserRequest) (*gateway.UserResponse, error) {
-//     // Перенаправление запроса к UserService
-//     res, err := s.userClient.GetUser(ctx, &user.GetUserRequest{UserId: req.UserId})
-//     if err != nil {
-//         return nil, err
-//     }
-//     return &gateway.UserResponse{
-//         Username: res.Username,
-//         Email:    res.Email,
-//     }, nil
-// }
+func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
+    // Пересылаем запрос на другой сервер
+    tokenResponse, err := s.userClient.CreateUser(ctx, &userPb.CreateUserRequest{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error with reg user in auth-service: %w", err)
+	}
 
-func (s *server) GetQuote(ctx context.Context, req *pb.QuoteRequest) (*pb.QuoteResponse, error) {
-	quote := "Success! Example quote for category: " + req.Category
-	return &pb.QuoteResponse{Quote: quote}, nil
+	var userID int64 = 1
+
+	return &pb.CreateUserResponse{
+		Id:          userID,
+		AccessToken: tokenResponse.AccessToken,
+		ExpiresIn:   tokenResponse.ExpiresIn,
+	}, nil
 }
+
+func (s *server) LoginUser(ctx context.Context, req *pb.UserLoginRequest) (*pb.UserLoginResponse, error) {
+    tokenResponse, err := s.userClient.LoginUser(ctx, &userPb.UserLoginRequest{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error auth: %w", err)
+	}
+
+	return &pb.UserLoginResponse{
+		AccessToken: tokenResponse.AccessToken,
+		ExpiresIn:   tokenResponse.ExpiresIn,
+	}, nil
+}
+
+func (s *server) ValidateUser(ctx context.Context, req *pb.TokenRequest) (*pb.RoleResponse, error) {
+    roleResponse, err := s.userClient.ValidateUser(ctx, &userPb.TokenRequest{
+		AccessToken: req.AccessToken,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error with validate token: %w", err)
+	}
+
+	return &pb.RoleResponse{
+		Role: roleResponse.Role,
+	}, nil
+}
+
 
 const (
 	serverCertFile = "./cert/gatewayService/certFile.pem"
@@ -96,11 +119,8 @@ func main() {
 
 
 	srv := grpc.NewServer(serverOpts...)
-
-	pb.RegisterQuoteServiceServer(srv, &server{})
-	gateway.RegisterGatewayServiceServer(srv, &server{            //Это будет иметь смысл когда появятся коннекты с модулями
-	    userClient: userClient,
-	})
+	//pb.RegisterQuoteServiceServer(srv, &server{})
+	pb.RegisterUserServiceServer(srv, &server{userClient: userClient,})
 
 	reflection.Register(srv)
 
