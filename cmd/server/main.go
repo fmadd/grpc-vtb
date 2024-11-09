@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"net"
 
-	_ "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-vtb/internal/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
@@ -27,7 +25,6 @@ type server struct {
 
 
 func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-    // Пересылаем запрос на другой сервер
     tokenResponse, err := s.userClient.CreateUser(ctx, &userPb.CreateUserRequest{
 		Username: req.Username,
 		Email:    req.Email,
@@ -106,11 +103,13 @@ func main() {
 
 
 
-	userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(creds))
 	if err != nil {
 	    logger.Logger.Fatal("did not connect", zap.Error(err))
 	}
 	defer userConn.Close()
+
+	
 	userClient := userPb.NewUserServiceClient(userConn)
 
 	if *tlsEnabled {
@@ -119,7 +118,6 @@ func main() {
 
 
 	srv := grpc.NewServer(serverOpts...)
-	//pb.RegisterQuoteServiceServer(srv, &server{})
 	pb.RegisterUserServiceServer(srv, &server{userClient: userClient,})
 
 	reflection.Register(srv)
