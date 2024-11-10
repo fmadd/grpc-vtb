@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "internal/auth/proto";
+
+message UserAuth {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message RegisterUserRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message TokenRequest {
+  string accessToken = 1;
+}
+
+message TokenResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+  int64 expiresIn = 3;
+}
+
+message RoleResponse {
+  string role = 1;       // пока только "registered" или "guest"
+  bool authorized = 2;     // true, если пользователь зарегистрирован
+}
+message RefreshTokenRequest {
+  string refreshToken = 1;
+}
+
+service AuthService {
+  rpc Login (UserAuth) returns (TokenResponse);
+  rpc ValidateToken (TokenRequest) returns (RoleResponse);
+  rpc RegisterUser (RegisterUserRequest) returns (TokenResponse);
+  rpc RefreshToken (RefreshTokenRequest) returns (TokenResponse);
+}
