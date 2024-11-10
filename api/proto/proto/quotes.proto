@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package quotes;
+
+option go_package = "./gen";
+
+message QuoteRequest {
+  string category = 1;
+}
+
+message QuoteResponse {
+  string quote = 1;
+}
+
+service QuoteService {
+  rpc GetQuote(QuoteRequest) returns (QuoteResponse);
+}

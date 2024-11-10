@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "internal/user/proto";
+
+
+// The User message definition
+message User {
+  int64 id = 1;
+  string username = 2;
+  string email = 3;
+}
+
+
+message CreateUserRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+
+message CreateUserResponse {
+  int64 id = 1;
+  string accessToken = 2;
+  int64 expiresIn = 3;
+}
+
+
+message GetUserByIDRequest {
+  int64 user_id = 1;
+}
+
+
+message GetUserByIDResponse {
+  User user = 1;
+}
+
+
+message UpdateUserRequest {
+  User user = 1;
+}
+
+
+message UpdateUserResponse {
+  bool success = 1;
+}
+
+
+message DeleteUserRequest {
+  int64 user_id = 1;
+}
+
+
+message DeleteUserResponse {
+  bool success = 1;
+}
+
+message UserLoginRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message UserLoginResponse {
+  string accessToken = 1;
+  int64 expiresIn = 2;
+}
+
+message TokenRequest {
+  string accessToken = 1;
+}
+
+message RoleResponse {
+  string role = 1;
+}
+
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc LoginUser(UserLoginRequest) returns (UserLoginResponse);
+  rpc ValidateUser (TokenRequest) returns (RoleResponse);
+}

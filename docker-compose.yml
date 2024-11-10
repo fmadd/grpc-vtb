@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: ./internal/auth/Dockerfile
+    environment:
+      - KEYCLOAK_URL=http://localhost:8080
+    ports:
+      - "8081:8081"
+    networks:
+      - grpc-network
+
+  user:
+    build:
+      context: .
+      dockerfile: ./internal/user/main/Dockerfile
+    depends_on:
+      - auth
+    environment:
+      - AUTH_SERVICE_URL=http://auth:8081
+    ports:
+      - "50053:50053"
+    networks:
+      - grpc-network
+
+  central-grpc-server:
+    build:
+      context: .
+      dockerfile: ./cmd/server/Dockerfile
+    depends_on:
+      - auth
+      - user
+    environment:
+      - USER_SERVICE_URL=user:50053
+    ports:
+      - "50051:50051"
+    networks:
+      - grpc-network
+
+networks:
+  grpc-network:
+    driver: bridge
