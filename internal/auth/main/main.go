@@ -27,7 +27,10 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		
+		err = cert.GenerateCertificate(serverCertFile, serverKeyFile)
+		if err != nil {
+			logger.Logger.Fatal("error generating certificate", zap.Error(err))
+		}
 		creds, err = cert.NewServerTLS(serverCertFile, serverKeyFile)
 		if err != nil {
 			logger.Logger.Fatal("failed to load key pair", zap.Error(err))
