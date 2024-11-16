@@ -17,15 +17,13 @@ import (
 	"github.com/grpc-vtb/pkg/cert"
 )
 
-
 type server struct {
 	pb.UnimplementedUserServiceServer
 	userClient userPb.UserServiceClient
 }
 
-
 func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-    tokenResponse, err := s.userClient.CreateUser(ctx, &userPb.CreateUserRequest{
+	tokenResponse, err := s.userClient.CreateUser(ctx, &userPb.CreateUserRequest{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -44,7 +42,7 @@ func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 }
 
 func (s *server) LoginUser(ctx context.Context, req *pb.UserLoginRequest) (*pb.UserLoginResponse, error) {
-    tokenResponse, err := s.userClient.LoginUser(ctx, &userPb.UserLoginRequest{
+	tokenResponse, err := s.userClient.LoginUser(ctx, &userPb.UserLoginRequest{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -60,7 +58,7 @@ func (s *server) LoginUser(ctx context.Context, req *pb.UserLoginRequest) (*pb.U
 }
 
 func (s *server) ValidateUser(ctx context.Context, req *pb.TokenRequest) (*pb.RoleResponse, error) {
-    roleResponse, err := s.userClient.ValidateUser(ctx, &userPb.TokenRequest{
+	roleResponse, err := s.userClient.ValidateUser(ctx, &userPb.TokenRequest{
 		AccessToken: req.AccessToken,
 	})
 	if err != nil {
@@ -72,17 +70,13 @@ func (s *server) ValidateUser(ctx context.Context, req *pb.TokenRequest) (*pb.Ro
 	}, nil
 }
 
-
 const (
 	serverCertFile = "./cert/gatewayService/certFile.pem"
 	serverKeyFile  = "./cert/gatewayService/keyFile.pem"
-	CACertFile     = "./cert/ca-cert.pem"
-	CACertKey      = "./cert/ca-key.pem"
-	secretKey      = "key"
 )
 
 func main() {
-	tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
+	tlsEnabled := flag.Bool("tls", true, "Enable TLS (default: false)")
 	flag.Parse()
 
 	var creds credentials.TransportCredentials
@@ -101,24 +95,20 @@ func main() {
 
 	serverOpts := []grpc.ServerOption{}
 
-
-
-	userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(creds))
+	userConn, err := grpc.NewClient("dns:///localhost:50053", grpc.WithTransportCredentials(creds))
 	if err != nil {
-	    logger.Logger.Fatal("did not connect", zap.Error(err))
+		logger.Logger.Fatal("did not connect", zap.Error(err))
 	}
 	defer userConn.Close()
 
-	
 	userClient := userPb.NewUserServiceClient(userConn)
 
 	if *tlsEnabled {
 		serverOpts = append(serverOpts, grpc.Creds(creds))
 	}
 
-
 	srv := grpc.NewServer(serverOpts...)
-	pb.RegisterUserServiceServer(srv, &server{userClient: userClient,})
+	pb.RegisterUserServiceServer(srv, &server{userClient: userClient})
 
 	reflection.Register(srv)
 
