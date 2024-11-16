@@ -1,0 +1,55 @@
+{"level":"INFO","timestamp":"2024-11-16T20:28:17.261+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":false}
+{"level":"FATAL","timestamp":"2024-11-16T21:57:09.643+0300","msg":"error generating certificate","error":"open ./cert/ca-cert.pem: no such file or directory"}
+{"level":"INFO","timestamp":"2024-11-16T21:58:31.204+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T21:59:07.694+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing: dial tcp 127.0.0.1:50053: connect: connection refused\""}
+{"level":"INFO","timestamp":"2024-11-16T22:02:42.441+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T22:03:16.235+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T22:03:19.638+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing: dial tcp 127.0.0.1:50053: connect: connection refused\""}
+{"level":"INFO","timestamp":"2024-11-16T22:04:36.886+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T22:04:40.338+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = connection error: desc = \"transport: authentication handshake failed: tls: failed to verify certificate: x509: certificate signed by unknown authority\""}
+{"level":"INFO","timestamp":"2024-11-16T22:15:55.783+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T22:15:59.988+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T22:16:06.316+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T22:16:09.406+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = connection error: desc = \"transport: authentication handshake failed: tls: failed to verify certificate: x509: certificate signed by unknown authority\""}
+{"level":"INFO","timestamp":"2024-11-16T22:19:50.768+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T22:19:54.217+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-16T22:20:43.100+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T22:20:46.874+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-16T22:21:24.727+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T22:21:27.610+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-16T22:22:12.369+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T22:22:14.777+0300","msg":"Пользователь успешно создан","ID":0,"AccessToken":"","ExpiresIn":0}
+{"level":"FATAL","timestamp":"2024-11-16T22:22:14.781+0300","msg":"Ошибка при авторизации пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-16T22:26:02.886+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T22:26:05.907+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = connection error: desc = \"transport: authentication handshake failed: tls: failed to verify certificate: x509: certificate signed by unknown authority\""}
+{"level":"INFO","timestamp":"2024-11-16T22:45:30.955+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T22:45:35.205+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T22:45:43.633+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = connection error: desc = \"transport: authentication handshake failed: tls: failed to verify certificate: x509: certificate signed by unknown authority\""}
+{"level":"INFO","timestamp":"2024-11-16T23:13:48.772+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T23:13:54.512+0300","msg":"did not connect","error":"grpc: no transport security set (use grpc.WithTransportCredentials(insecure.NewCredentials()) explicitly or set credentials)"}
+{"level":"FATAL","timestamp":"2024-11-16T23:16:59.000+0300","msg":"did not connect","error":"grpc: no transport security set (use grpc.WithTransportCredentials(insecure.NewCredentials()) explicitly or set credentials)"}
+{"level":"FATAL","timestamp":"2024-11-16T23:17:49.421+0300","msg":"failed to load key pair","error":"failed to load client certificate and key: open : no such file or directory"}
+{"level":"FATAL","timestamp":"2024-11-16T23:18:23.653+0300","msg":"failed to load key pair","error":"failed to load client certificate and key: open : no such file or directory"}
+{"level":"FATAL","timestamp":"2024-11-16T23:23:11.159+0300","msg":"did not connect","error":"grpc: no transport security set (use grpc.WithTransportCredentials(insecure.NewCredentials()) explicitly or set credentials)"}
+{"level":"FATAL","timestamp":"2024-11-16T23:23:27.503+0300","msg":"failed to load key pair","error":"failed to load client certificate and key: open : no such file or directory"}
+{"level":"FATAL","timestamp":"2024-11-16T23:26:50.177+0300","msg":"did not connect","error":"grpc: no transport security set (use grpc.WithTransportCredentials(insecure.NewCredentials()) explicitly or set credentials)"}
+{"level":"INFO","timestamp":"2024-11-16T23:29:15.837+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-16T23:29:52.285+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing: dial tcp 127.0.0.1:50051: connect: connection refused\""}
+{"level":"INFO","timestamp":"2024-11-16T23:30:31.935+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:30:38.417+0300","msg":"Attempting to login as clientID: %s, clientSecret: %s, realm: %s","clientID":"my_app","clientSecret":"Vc7k7zZUVrNnmrfFsk38rMuFJgkyqJRl","realm":"master"}
+{"level":"FATAL","timestamp":"2024-11-16T23:30:38.422+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-16T23:30:51.399+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:30:55.332+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:30:58.175+0300","msg":"Attempting to login as clientID: %s, clientSecret: %s, realm: %s","clientID":"my_app","clientSecret":"Vc7k7zZUVrNnmrfFsk38rMuFJgkyqJRl","realm":"master"}
+{"level":"FATAL","timestamp":"2024-11-16T23:30:58.179+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-16T23:31:34.866+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:41:39.315+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:41:42.710+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:41:48.345+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:41:51.069+0300","msg":"Attempting to login as clientID: %s, clientSecret: %s, realm: %s","clientID":"my_app","clientSecret":"Vc7k7zZUVrNnmrfFsk38rMuFJgkyqJRl","realm":"master"}
+{"level":"FATAL","timestamp":"2024-11-16T23:41:51.073+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-16T23:42:12.303+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:42:15.369+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:42:17.932+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:42:21.134+0300","msg":"Attempting to login as clientID: %s, clientSecret: %s, realm: %s","clientID":"my_app","clientSecret":"Vc7k7zZUVrNnmrfFsk38rMuFJgkyqJRl","realm":"master"}
+{"level":"FATAL","timestamp":"2024-11-16T23:42:21.139+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error reading from server: EOF"}
