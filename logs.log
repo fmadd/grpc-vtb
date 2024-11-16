@@ -43,3 +43,13 @@
 {"level":"INFO","timestamp":"2024-11-16T23:30:58.175+0300","msg":"Attempting to login as clientID: %s, clientSecret: %s, realm: %s","clientID":"my_app","clientSecret":"Vc7k7zZUVrNnmrfFsk38rMuFJgkyqJRl","realm":"master"}
 {"level":"FATAL","timestamp":"2024-11-16T23:30:58.179+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error reading from server: EOF"}
 {"level":"INFO","timestamp":"2024-11-16T23:31:34.866+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:41:39.315+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:41:42.710+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:41:48.345+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:41:51.069+0300","msg":"Attempting to login as clientID: %s, clientSecret: %s, realm: %s","clientID":"my_app","clientSecret":"Vc7k7zZUVrNnmrfFsk38rMuFJgkyqJRl","realm":"master"}
+{"level":"FATAL","timestamp":"2024-11-16T23:41:51.073+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-16T23:42:12.303+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:42:15.369+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:42:17.932+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-16T23:42:21.134+0300","msg":"Attempting to login as clientID: %s, clientSecret: %s, realm: %s","clientID":"my_app","clientSecret":"Vc7k7zZUVrNnmrfFsk38rMuFJgkyqJRl","realm":"master"}
+{"level":"FATAL","timestamp":"2024-11-16T23:42:21.139+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = error reading from server: EOF"}
