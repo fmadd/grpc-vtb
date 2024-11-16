@@ -79,22 +79,21 @@ func main() {
 	tlsEnabled := flag.Bool("tls", true, "Enable TLS (default: false)")
 	flag.Parse()
 
-	var creds credentials.TransportCredentials
+	var serverCreds, creds credentials.TransportCredentials
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(serverCertFile, serverKeyFile)
-		if err != nil {
-			logger.Logger.Fatal("error generating certificate", zap.Error(err))
-		}
-		creds, err = cert.LoadServerTLSCredentials(serverCertFile, serverKeyFile)
+		serverCreds, err = cert.NewServerTLS(serverCertFile, serverKeyFile)
 		if err != nil {
 			logger.Logger.Fatal("failed to load key pair", zap.Error(err))
 		}
 	}
 
 	serverOpts := []grpc.ServerOption{}
-
+	creds, err = cert.NewClientTLS(serverCertFile, serverKeyFile)
+	if err != nil {
+		logger.Logger.Fatal("failed to load key pair", zap.Error(err))
+	}
 	userConn, err := grpc.NewClient("dns:///localhost:50053", grpc.WithTransportCredentials(creds))
 	if err != nil {
 		logger.Logger.Fatal("did not connect", zap.Error(err))
@@ -104,7 +103,7 @@ func main() {
 	userClient := userPb.NewUserServiceClient(userConn)
 
 	if *tlsEnabled {
-		serverOpts = append(serverOpts, grpc.Creds(creds))
+		serverOpts = append(serverOpts, grpc.Creds(serverCreds))
 	}
 
 	srv := grpc.NewServer(serverOpts...)
