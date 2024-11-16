@@ -3,39 +3,36 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/grpc-vtb/internal/logger"
-	"go.uber.org/zap"
 	"time"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
+	"github.com/grpc-vtb/internal/logger"
 	"github.com/grpc-vtb/pkg/cert"
-
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
-	_ "google.golang.org/grpc/metadata"
 )
 
 const (
-	CACertFile = "./cert/ca-cert.pem"
-	CACertKey  = "./cert/ca-key.pem"
-	JwtToken   = "token_example"
-)
-const (
+	CACertFile     = "./cert/ca-cert.pem"
+	CACertKey      = "./cert/ca-key.pem"
 	clientCertFile = "./cert/client/certFile.pem"
 	clientKeyFile  = "./cert/client/keyFile.pem"
 )
 
 func main() {
-
-	tlsEnabled := flag.Bool("tls", false, "Enable TLS (default: false)")
+	tlsEnabled := flag.Bool("tls", true, "Enable TLS (default: false)")
 	flag.Parse()
 
 	var creds credentials.TransportCredentials
 	var err error
 
 	if *tlsEnabled {
-		cert.GenerateCertificate(clientCertFile, clientKeyFile)
+		err = cert.GenerateCertificate(clientCertFile, clientKeyFile)
+		if err != nil {
+			logger.Logger.Fatal("error generating certificate", zap.Error(err))
+		}
 		creds, err = cert.LoadClientTLSCredentials(clientCertFile, clientKeyFile)
 		if err != nil {
 			logger.Logger.Fatal("failed to create TLS credentials", zap.Error(err))
@@ -54,19 +51,48 @@ func main() {
 	}
 	defer conn.Close()
 
-	client := pb.NewQuoteServiceClient(conn)
+	client := pb.NewUserServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Задел для использования jwt токенов от клиента
-	// ctx = metadata.NewOutgoingContext(context.Background(), metadata.Pairs("authorization", "Bearer "+ JwtToken ))
-
-	req := &pb.QuoteRequest{Category: "inspiration"}
-	res, err := client.GetQuote(ctx, req)
-	if err != nil {
-		logger.Logger.Fatal("could not get quote", zap.Error(err))
+	// Тестирование CreateUser
+	createUserRequest := &pb.CreateUserRequest{
+		Username: "testuser",
+		Email:    "testuser@example.com",
+		Password: "securepassword",
 	}
+	createUserResponse, err := client.CreateUser(ctx, createUserRequest)
+	if err != nil {
+		logger.Logger.Fatal("Ошибка при создании пользователя", zap.Error(err))
+	}
+	logger.Logger.Info("Пользователь успешно создан",
+		zap.Int64("ID", createUserResponse.Id),
+		zap.String("AccessToken", createUserResponse.AccessToken),
+		zap.Int64("ExpiresIn", createUserResponse.ExpiresIn),
+	)
 
-	logger.Logger.Info("Quote", zap.String("Quote", res.Quote))
+	// Тестирование LoginUser
+	loginUserRequest := &pb.UserLoginRequest{
+		Username: "testuser",
+		Password: "securepassword",
+	}
+	loginUserResponse, err := client.LoginUser(ctx, loginUserRequest)
+	if err != nil {
+		logger.Logger.Fatal("Ошибка при авторизации пользователя", zap.Error(err))
+	}
+	logger.Logger.Info("Пользователь успешно авторизован",
+		zap.String("AccessToken", loginUserResponse.AccessToken),
+		zap.Int64("ExpiresIn", loginUserResponse.ExpiresIn),
+	)
+
+	// Тестирование ValidateUser
+	validateUserRequest := &pb.TokenRequest{
+		AccessToken: loginUserResponse.AccessToken,
+	}
+	validateUserResponse, err := client.ValidateUser(ctx, validateUserRequest)
+	if err != nil {
+		logger.Logger.Fatal("Ошибка при проверке токена", zap.Error(err))
+	}
+	logger.Logger.Info("Токен успешно проверен", zap.String("Role", validateUserResponse.Role))
 }
