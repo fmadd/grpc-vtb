@@ -20,38 +20,59 @@ import (
 const (
 	CACertFile = "./cert/ca-cert.pem"
 	CAKeyFile  = "./cert/ca-key.pem"
-	secretKey  = "secret"
 )
 const (
 	clientCertFile = "./cert/client-cert.pem"
 	clientKeyFile  = "./cert/client-key.pem"
-	JwtToken       = "token_example"
 )
-
-func LoadServerTLSCredentials(certFile string, keyFile string) (credentials.TransportCredentials, error) {
-	pemClientCA, err := os.ReadFile(CACertFile)
+func NewClientTLS(certFile, keyFile string) (credentials.TransportCredentials, error) {
+	pemServerCA, err := os.ReadFile(CACertFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read CA certificate: %w", err)
 	}
 
 	certPool := x509.NewCertPool()
-	if !certPool.AppendCertsFromPEM(pemClientCA) {
-		return nil, fmt.Errorf("failed to add client CA's certificate")
+	if !certPool.AppendCertsFromPEM(pemServerCA) {
+		return nil, fmt.Errorf("failed to add server CA's certificate to cert pool")
 	}
 
-	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	clientCert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load client certificate and key: %w", err)
 	}
 
 	config := &tls.Config{
-		Certificates: []tls.Certificate{tls.Certificate(serverCert)},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    certPool,
+		Certificates: []tls.Certificate{clientCert},
+		RootCAs:      certPool, 
 	}
 
 	return credentials.NewTLS(config), nil
 }
+func NewServerTLS(certFile, keyFile string) (credentials.TransportCredentials, error) {
+	pemClientCA, err := os.ReadFile(CACertFile)
+	if err != nil {
+	  return nil, fmt.Errorf("failed to read CA certificate: %w", err)
+	}
+  
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemClientCA) {
+	  return nil, errors.New("failed to add client CA's certificate to cert pool")
+	}
+  
+	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+	  return nil, fmt.Errorf("failed to load server certificate and key: %w", err)
+	}
+  
+	config := &tls.Config{
+	  Certificates: []tls.Certificate{serverCert},
+	  ClientAuth:   tls.RequireAndVerifyClientCert,
+	  ClientCAs:    certPool, 
+	}
+  
+	return credentials.NewTLS(config), nil
+}
+
 
 func LoadClientTLSCredentials(certFile string, keyFile string) (credentials.TransportCredentials, error) {
 	pemServerCA, err := os.ReadFile(CACertFile)
@@ -77,7 +98,6 @@ func LoadClientTLSCredentials(certFile string, keyFile string) (credentials.Tran
 	return credentials.NewTLS(config), nil
 }
 func GenerateCertificate(certFile, keyFile string) error {
-	// Чтение CA сертификата
 	caCertPEM, err := os.ReadFile(CACertFile)
 	if err != nil {
 		return err
@@ -117,7 +137,6 @@ func GenerateCertificate(certFile, keyFile string) error {
 		}
 	}
 
-	// Сертификат
 	cert := &x509.Certificate{
 		SerialNumber: big.NewInt(2),
 		Subject: pkix.Name{
@@ -143,11 +162,9 @@ func GenerateCertificate(certFile, keyFile string) error {
 	certDir := filepath.Dir(certFile)
 	keyDir := filepath.Dir(keyFile)
 
-	// Создание директории, если она не существует
 	if err := os.MkdirAll(certDir, 0755); err != nil {
 		return err
 	}
-	// Сохранение сертификата
 
 	certFileHandle, err := os.Create(certFile)
 	if err != nil {
@@ -163,7 +180,6 @@ func GenerateCertificate(certFile, keyFile string) error {
 		return err
 	}
 
-	// Сохранение ключа
 	keyFileHandle, err := os.Create(keyFile)
 	if err != nil {
 		return err
@@ -182,7 +198,6 @@ func GenerateCA(caFile, caKeyFile string) error {
 		return err
 	}
 
-	// CA certificate
 	caCert := &x509.Certificate{
         SerialNumber:          big.NewInt(1),
         Subject:               pkix.Name{CommonName: "localhost"},
@@ -200,11 +215,9 @@ func GenerateCA(caFile, caKeyFile string) error {
 	certDir := filepath.Dir(caFile)
 	keyDir := filepath.Dir(caKeyFile)
 
-	// Создание директории, если она не существует
 	if err := os.MkdirAll(certDir, 0755); err != nil {
 		return err
 	}
-	// Сохранение сертификата CA
 	caFileHandle, err := os.Create(caFile)
 	if err != nil {
 		return err
@@ -219,7 +232,6 @@ func GenerateCA(caFile, caKeyFile string) error {
 		return err
 	}
 
-	// Сохранение ключа CA
 	caKeyFileHandle, err := os.Create(caKeyFile)
 	if err != nil {
 		return err

@@ -17,9 +17,6 @@ import (
 const (
 	serverCertFile = "./cert/auth/certFile.pem"
 	serverKeyFile  = "./cert/auth/keyFile.pem"
-	CACertFile     = "./cert/ca-cert.pem"
-	CACertKey      = "./cert/ca-key.pem"
-	secretKey      = "key"
 )
 
 func main() {
@@ -30,11 +27,8 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(serverCertFile, serverKeyFile)
-		if err != nil {
-			logger.Logger.Fatal("error generating certificate", zap.Error(err))
-		}
-		creds, err = cert.LoadServerTLSCredentials(serverCertFile, serverKeyFile)
+		
+		creds, err = cert.NewServerTLS(serverCertFile, serverKeyFile)
 		if err != nil {
 			logger.Logger.Fatal("failed to load key pair", zap.Error(err))
 		}
