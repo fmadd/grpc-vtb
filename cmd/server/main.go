@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/grpc-vtb/cmd/ratelimiter"
 	"net"
 
 	"github.com/grpc-vtb/internal/logger"
@@ -93,12 +94,11 @@ func main() {
 		}
 	}
 
-	serverOpts := []grpc.ServerOption{}
 	creds, err = cert.NewClientTLS(serverCertFile, serverKeyFile)
 	if err != nil {
 		logger.Logger.Fatal("failed to load key pair", zap.Error(err))
 	}
-	userConn, err := grpc.NewClient("dns:///localhost:50053", grpc.WithTransportCredentials(creds))
+	userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(creds))
 	if err != nil {
 		logger.Logger.Fatal("did not connect", zap.Error(err))
 	}
@@ -106,9 +106,12 @@ func main() {
 
 	userClient := userPb.NewUserServiceClient(userConn)
 
+	serverOpts := []grpc.ServerOption{}
 	if *tlsEnabled {
 		serverOpts = append(serverOpts, grpc.Creds(serverCreds))
 	}
+
+	serverOpts = append(serverOpts, grpc.UnaryInterceptor(ratelimiter.RateLimitInterceptor))
 
 	srv := grpc.NewServer(serverOpts...)
 	pb.RegisterUserServiceServer(srv, &server{userClient: userClient})
