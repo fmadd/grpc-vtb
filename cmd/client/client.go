@@ -54,13 +54,13 @@ func main() {
 
 	client := pb.NewUserServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	createUserRequest := &pb.CreateUserRequest{
-		Username: "testuser",
-		Email:    "testuser@example.com",
-		Password: "securepassword",
+		Username: "testusr",
+		Email:    "testusr@example.com",
+		Password: "secureassword",
 	}
 	createUserResponse, err := client.CreateUser(ctx, createUserRequest)
 	if err != nil {
@@ -83,7 +83,52 @@ func main() {
 	logger.Logger.Info("Пользователь успешно авторизован",
 		zap.String("AccessToken", loginUserResponse.AccessToken),
 		zap.Int64("ExpiresIn", loginUserResponse.ExpiresIn),
+		zap.String("RefreshToken", loginUserResponse.RefreshToken),
 	)
+
+	RefreshUserRequest := &pb.RefreshGrpcTokenRequest{
+		RefreshToken: loginUserResponse.RefreshToken,
+	}
+	RefreshUserResponse, err := client.RefreshGrpcToken(ctx, RefreshUserRequest)
+
+	if err != nil {
+		logger.Logger.Fatal("Ошибка при обновлении токена", zap.Error(err))
+	} else {
+		logger.Logger.Info("Токен успешно обновлён:",
+			zap.String("AccessToken", RefreshUserResponse.AccessToken),
+			zap.Int64("ExpiresIn", RefreshUserResponse.ExpiresIn),
+			zap.String("RefreshToken", loginUserResponse.RefreshToken),
+		)
+	}
+
+	TokenRequest := &pb.TokenRequest{
+		AccessToken: RefreshUserResponse.AccessToken,
+	}
+	role, err := client.ValidateUser(ctx, TokenRequest)
+
+	if err != nil {
+		logger.Logger.Fatal("Ошибка проверке токена", zap.String("AccessToken: ", RefreshUserResponse.AccessToken), zap.Error(err))
+	} else {
+		logger.Logger.Info("Токен успешно прошел проверку:",
+			zap.String("AccessToken: ", RefreshUserResponse.AccessToken),
+			zap.String("Role:", role.Role),
+		)
+	}
+
+	TokenRequest = &pb.TokenRequest{
+		AccessToken: loginUserResponse.AccessToken,
+	}
+	role, err = client.ValidateUser(ctx, TokenRequest)
+
+	if err != nil {
+		logger.Logger.Info("Ошибка проверке токена", zap.String("AccessToken: ", loginUserResponse.AccessToken), zap.Error(err))
+
+	} else {
+		logger.Logger.Info("Токен успешно прошел проверку:",
+			zap.String("AccessToken: ", loginUserResponse.AccessToken),
+			zap.String("Role:", role.Role),
+		)
+	}
 
 	delay := 1 * time.Second
 	logger.Logger.Info(fmt.Sprintf("Ожидание %v до начала теста на анти-DDoS...", delay))
@@ -95,13 +140,14 @@ func main() {
 	startTime := time.Now()
 
 	for i := 0; i < numRequests; i++ {
-		_, err := client.LoginUser(ctx, loginUserRequest)
+		loginUserResponse, err := client.LoginUser(ctx, loginUserRequest)
 		if err != nil {
 			logger.Logger.Info("Ошибка при авторизации пользователя", zap.Error(err))
 		} else {
 			logger.Logger.Info("Пользователь успешно авторизован",
 				zap.String("AccessToken", loginUserResponse.AccessToken),
 				zap.Int64("ExpiresIn", loginUserResponse.ExpiresIn),
+				zap.String("RefreshToken", loginUserResponse.RefreshToken),
 			)
 		}
 

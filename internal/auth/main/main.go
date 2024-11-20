@@ -17,8 +17,6 @@ import (
 const (
 	serverCertFile = "./cert/auth/certFile.pem"
 	serverKeyFile  = "./cert/auth/keyFile.pem"
-	keycloakURL    = "http://localhost:8080"
-	realmName      = "master" // Имя вашего realm в Keycloak
 )
 
 func main() {
@@ -28,7 +26,6 @@ func main() {
 	var creds credentials.TransportCredentials
 	var err error
 
-	// Генерация сертификатов для TLS
 	if *tlsEnabled {
 		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "auth")
 		if err != nil {
@@ -40,25 +37,20 @@ func main() {
 		}
 	}
 
-	// Настройки для gRPC сервера
 	serverOpts := []grpc.ServerOption{}
 	if *tlsEnabled {
 		serverOpts = append(serverOpts, grpc.Creds(creds))
 	}
 
-	// Создаем новый gRPC сервер
 	srv := grpc.NewServer(serverOpts...)
 
-	// Создаем клиента для Keycloak
 	client := gocloak.NewClient("http://host.docker.internal:8080")
 
-	authService := handler.NewAuthHandler(client, "realm", "client", "secret")
+	authService := handler.NewAuthHandler(client, "master", "my_app", "Vc7k7zZUVrNnmrfFsk38rMuFJgkyqJRl")
 
-	// Регистрируем сервисы
 	proto.RegisterAuthServiceServer(srv, authService)
 	reflection.Register(srv)
 
-	// Настройка listener'а для сервера
 	listener, err := net.Listen("tcp", ":8081")
 	if err != nil {
 		logger.Logger.Fatal("failed to listen", zap.Error(err))
