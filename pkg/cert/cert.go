@@ -25,6 +25,7 @@ const (
 	clientCertFile = "./cert/client-cert.pem"
 	clientKeyFile  = "./cert/client-key.pem"
 )
+
 func NewClientTLS(certFile, keyFile string) (credentials.TransportCredentials, error) {
 	pemServerCA, err := os.ReadFile(CACertFile)
 	if err != nil {
@@ -43,7 +44,7 @@ func NewClientTLS(certFile, keyFile string) (credentials.TransportCredentials, e
 
 	config := &tls.Config{
 		Certificates: []tls.Certificate{clientCert},
-		RootCAs:      certPool, 
+		RootCAs:      certPool,
 	}
 
 	return credentials.NewTLS(config), nil
@@ -51,28 +52,27 @@ func NewClientTLS(certFile, keyFile string) (credentials.TransportCredentials, e
 func NewServerTLS(certFile, keyFile string) (credentials.TransportCredentials, error) {
 	pemClientCA, err := os.ReadFile(CACertFile)
 	if err != nil {
-	  return nil, fmt.Errorf("failed to read CA certificate: %w", err)
+		return nil, fmt.Errorf("failed to read CA certificate: %w", err)
 	}
-  
+
 	certPool := x509.NewCertPool()
 	if !certPool.AppendCertsFromPEM(pemClientCA) {
-	  return nil, errors.New("failed to add client CA's certificate to cert pool")
+		return nil, errors.New("failed to add client CA's certificate to cert pool")
 	}
-  
+
 	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-	  return nil, fmt.Errorf("failed to load server certificate and key: %w", err)
+		return nil, fmt.Errorf("failed to load server certificate and key: %w", err)
 	}
-  
+
 	config := &tls.Config{
-	  Certificates: []tls.Certificate{serverCert},
-	  ClientAuth:   tls.RequireAndVerifyClientCert,
-	  ClientCAs:    certPool, 
+		Certificates: []tls.Certificate{serverCert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    certPool,
 	}
-  
+
 	return credentials.NewTLS(config), nil
 }
-
 
 func LoadClientTLSCredentials(certFile string, keyFile string) (credentials.TransportCredentials, error) {
 	pemServerCA, err := os.ReadFile(CACertFile)
@@ -97,7 +97,7 @@ func LoadClientTLSCredentials(certFile string, keyFile string) (credentials.Tran
 
 	return credentials.NewTLS(config), nil
 }
-func GenerateCertificate(certFile, keyFile string) error {
+func GenerateCertificate(certFile, keyFile, hostname string) error {
 	caCertPEM, err := os.ReadFile(CACertFile)
 	if err != nil {
 		return err
@@ -145,13 +145,13 @@ func GenerateCertificate(certFile, keyFile string) error {
 			Locality:           []string{"Moscow"},
 			Organization:       []string{"Company"},
 			OrganizationalUnit: []string{"Department"},
-			CommonName:         "localhost",
+			CommonName:         hostname, // Здесь используется параметр hostname
 		},
 		NotBefore:   time.Now(),
 		NotAfter:    time.Now().Add(365 * 24 * time.Hour), // 1 год
 		KeyUsage:    x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
-		DNSNames:    []string{"localhost"},
+		DNSNames:    []string{hostname}, // Использование hostname для DNSNames
 	}
 
 	certDER, err := x509.CreateCertificate(rand.Reader, cert, caCert, &caKey.PublicKey, caKey)
@@ -192,6 +192,7 @@ func GenerateCertificate(certFile, keyFile string) error {
 
 	return nil
 }
+
 func GenerateCA(caFile, caKeyFile string) error {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -199,14 +200,14 @@ func GenerateCA(caFile, caKeyFile string) error {
 	}
 
 	caCert := &x509.Certificate{
-        SerialNumber:          big.NewInt(1),
-        Subject:               pkix.Name{CommonName: "localhost"},
-        NotBefore:             time.Now(),
-        NotAfter:              time.Now().Add(10 * 365 * 24 * time.Hour),
-        KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
-        BasicConstraintsValid: true,
-        IsCA:                  true,
-    }
+		SerialNumber:          big.NewInt(1),
+		Subject:               pkix.Name{CommonName: "localhost"},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(10 * 365 * 24 * time.Hour),
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+	}
 
 	caDER, err := x509.CreateCertificate(rand.Reader, caCert, caCert, &privateKey.PublicKey, privateKey)
 	if err != nil {

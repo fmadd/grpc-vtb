@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"time"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
@@ -29,7 +30,7 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(clientCertFile, clientKeyFile)
+		err = cert.GenerateCertificate(clientCertFile, clientKeyFile, "localhost")
 		if err != nil {
 			logger.Logger.Fatal("error generating certificate", zap.Error(err))
 		}
@@ -56,7 +57,6 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Тестирование CreateUser
 	createUserRequest := &pb.CreateUserRequest{
 		Username: "testuser",
 		Email:    "testuser@example.com",
@@ -72,7 +72,6 @@ func main() {
 		zap.Int64("ExpiresIn", createUserResponse.ExpiresIn),
 	)
 
-	// Тестирование LoginUser
 	loginUserRequest := &pb.UserLoginRequest{
 		Username: "testuser",
 		Password: "securepassword",
@@ -86,13 +85,33 @@ func main() {
 		zap.Int64("ExpiresIn", loginUserResponse.ExpiresIn),
 	)
 
-	// Тестирование ValidateUser
-	validateUserRequest := &pb.TokenRequest{
-		AccessToken: loginUserResponse.AccessToken,
+	delay := 1 * time.Second
+	logger.Logger.Info(fmt.Sprintf("Ожидание %v до начала теста на анти-DDoS...", delay))
+	time.Sleep(delay)
+
+	numRequests := 100
+	interval := 10 * time.Millisecond
+
+	startTime := time.Now()
+
+	for i := 0; i < numRequests; i++ {
+		_, err := client.LoginUser(ctx, loginUserRequest)
+		if err != nil {
+			logger.Logger.Info("Ошибка при авторизации пользователя", zap.Error(err))
+		} else {
+			logger.Logger.Info("Пользователь успешно авторизован",
+				zap.String("AccessToken", loginUserResponse.AccessToken),
+				zap.Int64("ExpiresIn", loginUserResponse.ExpiresIn),
+			)
+		}
+
+		if i%100 == 0 && i != 0 {
+			logger.Logger.Info(fmt.Sprintf("Отправлено %d запросов", i))
+		}
+		time.Sleep(interval)
 	}
-	validateUserResponse, err := client.ValidateUser(ctx, validateUserRequest)
-	if err != nil {
-		logger.Logger.Fatal("Ошибка при проверке токена", zap.Error(err))
-	}
-	logger.Logger.Info("Токен успешно проверен", zap.String("Role", validateUserResponse.Role))
+
+	elapsedTime := time.Since(startTime)
+	logger.Logger.Info(fmt.Sprintf("Отправлено %d запросов за %v", numRequests, elapsedTime))
+
 }
