@@ -1,6 +1,19 @@
 version: '3.8'
 
 services:
+
+  keycloak:
+    build:
+      context: .
+      dockerfile: ./opt/keycloak-26.0.5/Dockerfile
+    ports:
+      - "8080:8080"
+
+
+    networks:
+      - grpc-network
+
+
   auth:
     build:
       context: .

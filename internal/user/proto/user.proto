@@ -65,18 +65,28 @@ message UserLoginRequest {
 message UserLoginResponse {
   string accessToken = 1;
   int64 expiresIn = 2;
+  string refreshToken = 3;
 }
 
 message TokenRequest {
   string accessToken = 1;
 }
-
+message RefreshUserTokenResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+  int64 expiresIn = 3;
+}
 message RoleResponse {
   string role = 1;
+}
+
+message RefreshUserTokenRequest {
+  string refreshToken = 1;
 }
 
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
   rpc LoginUser(UserLoginRequest) returns (UserLoginResponse);
   rpc ValidateUser (TokenRequest) returns (RoleResponse);
+  rpc RefreshUserToken (RefreshUserTokenRequest) returns (RefreshUserTokenResponse);
 }

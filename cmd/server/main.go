@@ -53,8 +53,9 @@ func (s *server) LoginUser(ctx context.Context, req *pb.UserLoginRequest) (*pb.U
 	}
 
 	return &pb.UserLoginResponse{
-		AccessToken: tokenResponse.AccessToken,
-		ExpiresIn:   tokenResponse.ExpiresIn,
+		AccessToken:  tokenResponse.AccessToken,
+		ExpiresIn:    tokenResponse.ExpiresIn,
+		RefreshToken: tokenResponse.RefreshToken,
 	}, nil
 }
 
@@ -75,6 +76,22 @@ const (
 	serverCertFile = "./cert/gatewayService/certFile.pem"
 	serverKeyFile  = "./cert/gatewayService/keyFile.pem"
 )
+
+func (s *server) RefreshGrpcToken(ctx context.Context, req *pb.RefreshGrpcTokenRequest) (*pb.RefreshGrpcTokenResponse, error) {
+	token, err := s.userClient.RefreshUserToken(ctx, &userPb.RefreshUserTokenRequest{
+		RefreshToken: req.RefreshToken,
+	})
+	if err != nil {
+		logger.Logger.Error("Error refreshing token:", zap.Error(err))
+		return nil, fmt.Errorf("failed to refresh token: %v clientToken: %s", err, req.RefreshToken)
+	}
+
+	return &pb.RefreshGrpcTokenResponse{
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		ExpiresIn:    int64(token.ExpiresIn),
+	}, nil
+}
 
 func main() {
 	tlsEnabled := flag.Bool("tls", true, "Enable TLS (default: false)")

@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/grpc-vtb/internal/auth/proto"
+	"github.com/grpc-vtb/internal/logger"
 	userProto "github.com/grpc-vtb/internal/user/proto"
+	"go.uber.org/zap"
 )
 
 type UserHandler struct {
@@ -60,8 +62,9 @@ func (h *UserHandler) LoginUser(ctx context.Context, req *userProto.UserLoginReq
 	}
 
 	return &userProto.UserLoginResponse{
-		AccessToken: tokenResponse.AccessToken,
-		ExpiresIn:   tokenResponse.ExpiresIn,
+		AccessToken:  tokenResponse.AccessToken,
+		ExpiresIn:    tokenResponse.ExpiresIn,
+		RefreshToken: tokenResponse.RefreshToken,
 	}, nil
 }
 
@@ -75,5 +78,21 @@ func (h *UserHandler) ValidateUser(ctx context.Context, req *userProto.TokenRequ
 
 	return &userProto.RoleResponse{
 		Role: roleResponse.Role,
+	}, nil
+}
+
+func (h *UserHandler) RefreshUserToken(ctx context.Context, req *userProto.RefreshUserTokenRequest) (*userProto.RefreshUserTokenResponse, error) {
+	token, err := h.AuthClient.RefreshToken(ctx, &proto.RefreshTokenRequest{
+		RefreshToken: req.RefreshToken,
+	})
+	if err != nil {
+		logger.Logger.Error("Error refreshing token:", zap.Error(err))
+		return nil, fmt.Errorf("failed to refresh token: %v clientToken: %s", err, req.RefreshToken)
+	}
+
+	return &userProto.RefreshUserTokenResponse{
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		ExpiresIn:    int64(token.ExpiresIn),
 	}, nil
 }
