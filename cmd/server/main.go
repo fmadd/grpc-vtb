@@ -84,7 +84,7 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(serverCertFile, serverKeyFile)
+		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "localhost")
 		if err != nil {
 			logger.Logger.Fatal("error generating certificate", zap.Error(err))
 		}
@@ -98,7 +98,7 @@ func main() {
 	if err != nil {
 		logger.Logger.Fatal("failed to load key pair", zap.Error(err))
 	}
-	userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(creds))
+	userConn, err := grpc.Dial("user:50053", grpc.WithTransportCredentials(creds))
 	if err != nil {
 		logger.Logger.Fatal("did not connect", zap.Error(err))
 	}
