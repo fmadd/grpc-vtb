@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package gateway;
 
-option go_package = "./gen";
+option go_package = "./api/proto/gen";
 
 message User {
   int64 id = 1;
@@ -55,6 +55,7 @@ message UserLoginRequest {
 message UserLoginResponse {
   string accessToken = 1;
   int64 expiresIn = 2;
+  string refreshToken = 3;
 }
 
 message TokenRequest {
@@ -65,8 +66,19 @@ message RoleResponse {
   string role = 1;
 }
 
+message RefreshGrpcTokenResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+  int64 expiresIn = 3;
+}
+
+message RefreshGrpcTokenRequest {
+  string refreshToken = 1;
+}
+
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
   rpc LoginUser(UserLoginRequest) returns (UserLoginResponse);
   rpc ValidateUser (TokenRequest) returns (RoleResponse);
+  rpc RefreshGrpcToken (RefreshGrpcTokenRequest) returns (RefreshGrpcTokenResponse);
 }
