@@ -30,7 +30,8 @@ func main() {
 
 	// Генерация сертификатов для TLS
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "auth")
+		err = cert.GenerateCSR("auth", "localhost")
+		//err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "auth")
 		if err != nil {
 			logger.Logger.Fatal("error generating certificate", zap.Error(err))
 		}

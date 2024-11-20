@@ -79,18 +79,31 @@ const (
 func main() {
 	tlsEnabled := flag.Bool("tls", true, "Enable TLS (default: false)")
 	flag.Parse()
+	
 
 	var serverCreds, creds credentials.TransportCredentials
 	var err error
-
+	err = cert.GenerateCACert("localhost")
+	if err != nil {
+		logger.Logger.Fatal("error generating ca certificate", zap.Error(err))
+	}
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "localhost")
+		//err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "localhost")
+
+		err = cert.GenerateCSR("gatewayService", "localhost")
+
 		if err != nil {
-			logger.Logger.Fatal("error generating certificate", zap.Error(err))
+			logger.Logger.Fatal("!!error generating certificate", zap.Error(err))
 		}
+
+		err = cert.SignCert("gatewayService")
+		if err != nil {
+			logger.Logger.Fatal("error sign certificate", zap.Error(err))
+		}
+
 		serverCreds, err = cert.NewServerTLS(serverCertFile, serverKeyFile)
 		if err != nil {
-			logger.Logger.Fatal("failed to load key pair", zap.Error(err))
+			logger.Logger.Fatal("!!failed to load key pair", zap.Error(err))
 		}
 	}
 

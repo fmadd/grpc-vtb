@@ -40,6 +40,10 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxv
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/martinlindhe/gogost v0.0.0-20170914195721-31862914ae20 h1:NgvNvoe91W36nQwPNvM8KSyvN7Tgfrp1gGhNqp6iuK8=
+github.com/martinlindhe/gogost v0.0.0-20170914195721-31862914ae20/go.mod h1:QWtANgYYeIaHYj7lc8bygiTdXt3t3bQHH6ObdVMIC2s=
+github.com/number571/go-cryptopro v1.0.3 h1:mB6ljhPcSG74XI96UWAmYJpE4vkpWRy+7AlMXIS7At0=
+github.com/number571/go-cryptopro v1.0.3/go.mod h1:NYZs23oxdTTLrwca9o5cWIqdKC2QxnfF1PJi7p5h7yM=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=

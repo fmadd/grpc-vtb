@@ -2841,3 +2841,33 @@
 {"level":"INFO","timestamp":"2024-11-17T14:42:29.216+0300","msg":"Ошибка при авторизации пользователя","error":"rpc error: code = DeadlineExceeded desc = context deadline exceeded"}
 {"level":"INFO","timestamp":"2024-11-17T14:42:29.227+0300","msg":"Ошибка при авторизации пользователя","error":"rpc error: code = DeadlineExceeded desc = context deadline exceeded"}
 {"level":"INFO","timestamp":"2024-11-17T14:42:29.237+0300","msg":"Отправлено 100 запросов за 3.798386s"}
+{"level":"INFO","timestamp":"2024-11-20T20:36:34.994+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-20T20:36:47.010+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-20T20:36:53.600+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-20T20:37:04.110+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing: dial tcp: lookup user on 127.0.0.53:53: server misbehaving\""}
+{"level":"FATAL","timestamp":"2024-11-20T22:27:57.608+0300","msg":"error generating certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-20T22:29:06.736+0300","msg":"error generating certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-20T22:29:55.397+0300","msg":"error generating ca certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-20T22:30:35.412+0300","msg":"error generating certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-20T22:36:19.369+0300","msg":"error generating certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-20T22:39:32.476+0300","msg":"error generating certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-20T22:39:40.720+0300","msg":"error generating!! certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-20T22:41:13.420+0300","msg":"error sign certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-20T22:41:58.445+0300","msg":"error sign certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-20T22:42:22.358+0300","msg":"error sign certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-20T22:42:38.476+0300","msg":"failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
+{"level":"FATAL","timestamp":"2024-11-20T22:43:29.211+0300","msg":"failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
+{"level":"FATAL","timestamp":"2024-11-20T22:46:22.350+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
+{"level":"FATAL","timestamp":"2024-11-21T01:52:45.240+0300","msg":"error generating certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-21T01:53:05.349+0300","msg":"!!error generating certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-21T01:53:35.964+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
+{"level":"FATAL","timestamp":"2024-11-21T01:54:52.226+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
+{"level":"FATAL","timestamp":"2024-11-21T01:56:54.132+0300","msg":"failed to load key pair","error":"failed to load server certificate and key: tls: failed to find \"CERTIFICATE\" PEM block in certificate input after skipping PEM blocks of the following types: [CERTIFICATE REQUEST]"}
+{"level":"FATAL","timestamp":"2024-11-21T01:57:08.158+0300","msg":"failed to load key pair","error":"failed to load server certificate and key: tls: failed to find \"CERTIFICATE\" PEM block in certificate input after skipping PEM blocks of the following types: [CERTIFICATE REQUEST]"}
+{"level":"FATAL","timestamp":"2024-11-21T01:57:12.832+0300","msg":"error generating ca certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-21T01:57:30.311+0300","msg":"error generating ca certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-21T01:58:00.373+0300","msg":"!!error generating certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-21T01:58:41.945+0300","msg":"failed to create TLS credentials","error":"tls: failed to find \"CERTIFICATE\" PEM block in certificate input after skipping PEM blocks of the following types: [CERTIFICATE REQUEST]"}
+{"level":"FATAL","timestamp":"2024-11-21T01:58:47.937+0300","msg":"!!error generating certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-21T01:59:27.102+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
+{"level":"FATAL","timestamp":"2024-11-21T01:59:53.678+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}

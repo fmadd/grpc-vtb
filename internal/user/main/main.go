@@ -27,7 +27,9 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "user")
+		//err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "user")
+		err = cert.GenerateCSR("user", "localhost")
+
 		if err != nil {
 			logger.Logger.Fatal("error generating certificate", zap.Error(err))
 		}

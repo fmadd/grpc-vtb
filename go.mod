@@ -13,6 +13,7 @@ require (
 require (
 	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
+	github.com/number571/go-cryptopro v1.0.3 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
@@ -24,6 +25,7 @@ require (
 
 require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
+	github.com/martinlindhe/gogost v0.0.0-20170914195721-31862914ae20
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.17.0 // indirect

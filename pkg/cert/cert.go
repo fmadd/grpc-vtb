@@ -11,10 +11,12 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
 	"google.golang.org/grpc/credentials"
+  
 )
 
 const (
@@ -244,4 +246,32 @@ func GenerateCA(caFile, caKeyFile string) error {
 	}
 
 	return nil
+}
+
+
+func GenerateCACert(hostname string) error {
+    cmd := exec.Command("openssl", "req", "-x509", "-newkey", "gost2012_256",
+        "-pkeyopt", "paramset:A", "-nodes",
+        "-keyout", "cert/ca-key.pem", "-out", "cert/ca-cert.pem",
+        "-md_gost12_256", "-days", "3650", "-subj", fmt.Sprintf("/C=RU/ST=MO/L=Moscow/O=Company/OU=Department/CN=%s/keyUsage=digitalSignature,keyEncipherment/extendedKeyUsage=serverAuth,clientAuth/subjectAltName=DNS:%s", hostname, hostname))
+    return cmd.Run()
+}
+
+func GenerateCSR(serverName string, hostname string) error {
+	if err := os.MkdirAll(fmt.Sprintf("cert/%s", serverName), os.ModePerm); err != nil {
+        return fmt.Errorf("failed to create directory: %v", err)
+    }
+    cmd := exec.Command("openssl", "req", "-new", "-newkey", "gost2012_256",
+        "-pkeyopt", "paramset:A", "-nodes",
+        "-keyout", fmt.Sprintf("cert/%s/keyFile.pem", serverName), "-out", fmt.Sprintf("cert/%s/certFile.pem", serverName),
+        "-subj", fmt.Sprintf("/C=RU/ST=MO/L=Moscow/O=Company/OU=Department/CN=%s/keyUsage=digitalSignature,keyEncipherment,keyAgreement/extendedKeyUsage=serverAuth,clientAuth/subjectAltName=DNS:%s", hostname, hostname))
+    return cmd.Run()
+}
+
+func SignCert(serverName string) error {
+
+    cmd := exec.Command("openssl", "x509", "-req", "-in",  fmt.Sprintf("cert/%s/certFile.pem", serverName),
+        "-CA", "cert/ca-cert.pem", "-CAkey", "cert/ca-key.pem",
+        "-CAcreateserial", "-out", fmt.Sprintf("cert/%s/certFile.pem", serverName), "-days", "365", "-md_gost12_256")
+    return cmd.Run()
 }
