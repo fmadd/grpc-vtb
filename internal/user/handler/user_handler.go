@@ -12,10 +12,8 @@ import (
 type UserHandler struct {
 	AuthClient proto.AuthServiceClient
 	userProto.UnimplementedUserServiceServer
-	//userDB     UserDatabase
 }
 
-// Задел на бд в будущем для масштабирования проекта
 type UserDatabase interface {
 	CreateUser(ctx context.Context, username, email string) (int64, error)
 	GetUserByID(ctx context.Context, userID int64) (*userProto.User, error)
@@ -36,11 +34,6 @@ func (h *UserHandler) CreateUser(ctx context.Context, req *userProto.CreateUserR
 	if err != nil {
 		return nil, fmt.Errorf("error with reg user in auth-service: %w", err)
 	}
-
-	//userID, err := h.userDB.CreateUser(ctx, req.Username, req.Email)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error with create user in db user model: %w", err)
-	//}
 
 	var userID int64 = 1
 

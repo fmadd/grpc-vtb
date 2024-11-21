@@ -21,10 +21,6 @@ const (
 	CACertFile = "./cert/ca-cert.pem"
 	CAKeyFile  = "./cert/ca-key.pem"
 )
-const (
-	clientCertFile = "./cert/client-cert.pem"
-	clientKeyFile  = "./cert/client-key.pem"
-)
 
 func NewClientTLS(certFile, keyFile string) (credentials.TransportCredentials, error) {
 	pemServerCA, err := os.ReadFile(CACertFile)

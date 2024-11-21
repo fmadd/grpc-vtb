@@ -55,9 +55,6 @@ services:
     build:
       context: .
       dockerfile: ./nginx/Dockerfile
-    volumes:
-      - certs:/etc/nginx/cert
-      - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
       - "80:80"
       - "443:443"
@@ -69,4 +66,4 @@ networks:
     driver: bridge
 
 volumes:
-  certs:  
+  certs:

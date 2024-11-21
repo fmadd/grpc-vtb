@@ -16,8 +16,6 @@ import (
 )
 
 const (
-	CACertFile     = "./cert/ca-cert.pem"
-	CACertKey      = "./cert/ca-key.pem"
 	clientCertFile = "./cert/client/certFile.pem"
 	clientKeyFile  = "./cert/client/keyFile.pem"
 )
@@ -58,9 +56,9 @@ func main() {
 	defer cancel()
 
 	createUserRequest := &pb.CreateUserRequest{
-		Username: "testusr",
-		Email:    "testusr@example.com",
-		Password: "secureassword",
+		Username: "testuser",
+		Email:    "testuser@example.com",
+		Password: "securepassword",
 	}
 	createUserResponse, err := client.CreateUser(ctx, createUserRequest)
 	if err != nil {

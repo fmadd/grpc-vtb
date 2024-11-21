@@ -5,7 +5,6 @@ package user;
 option go_package = "internal/user/proto";
 
 
-// The User message definition
 message User {
   int64 id = 1;
   string username = 2;
