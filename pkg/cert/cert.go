@@ -9,11 +9,13 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"time"
 
 	"google.golang.org/grpc/credentials"
@@ -21,9 +23,12 @@ import (
 	commandLine "github.com/grpc-vtb/pkg/commandline"
 	signByPEMBytes "github.com/grpc-vtb/pkg/signbypembytes"
 
-	//signgost3410 "github.com/grpc-vtb/pkg/singgost3410"
+	signgost3410 "github.com/grpc-vtb/pkg/singgost3410"
 	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/containers/certificate"
-	//privatekey "github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/containers/private-key"
+	privatekey "github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/containers/private-key"
+	signedmessage "github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/containers/signed-message"
+	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/oids/hash"
+
 	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/services/sign"
 	"github.com/nobuenhombre/suikat/pkg/ge"
 )
@@ -109,100 +114,107 @@ func LoadClientTLSCredentials(certFile string, keyFile string) (credentials.Tran
 	return credentials.NewTLS(config), nil
 }
 func GenerateCertificate(certFile, keyFile, hostname string) error {
-	caCertPEM, err := os.ReadFile(CACertFile)
-	if err != nil {
-		return err
-	}
+    caCertPEM, err := os.ReadFile(CACertFile)
+    if err != nil {
+        return err
+    }
 
-	caKeyPEM, err := os.ReadFile(CAKeyFile)
-	if err != nil {
-		return err
-	}
+    caKeyPEM, err := os.ReadFile(CAKeyFile)
+    if err != nil {
+        return err
+    }
 
-	block, _ := pem.Decode(caCertPEM)
-	if block == nil || block.Type != "CERTIFICATE" {
-		return errors.New("failed to parse CA certificate")
-	}
+    // Декодируем CA сертификат
+    block, _ := pem.Decode(caCertPEM)
+    if block == nil || block.Type != "CERTIFICATE" {
+        return errors.New("failed to parse CA certificate")
+    }
 
-	caCert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return err
-	}
+    caCert, err := x509.ParseCertificate(block.Bytes)
+    if err != nil {
+        return err
+    }
 
-	block, _ = pem.Decode(caKeyPEM)
-	if block == nil {
-		return errors.New("failed to parse CA private key")
-	}
+    // Декодируем CA приватный ключ
+    block, _ = pem.Decode(caKeyPEM)
+    if block == nil {
+        return errors.New("failed to parse CA private key")
+    }
 
-	var caKey *rsa.PrivateKey
-	caKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-		if err != nil {
-			return errors.New("failed to parse CA private key: " + err.Error())
-		}
-		var ok bool
-		caKey, ok = parsedKey.(*rsa.PrivateKey)
-		if !ok {
-			return errors.New("private key is not RSA")
-		}
-	}
+    var caKey *rsa.PrivateKey
+    caKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+    if err != nil {
+        parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+        if err != nil {
+            return errors.New("failed to parse CA private key: " + err.Error())
+        }
+        var ok bool
+        caKey, ok = parsedKey.(*rsa.PrivateKey)
+        if !ok {
+            return errors.New("private key is not RSA")
+        }
+    }
 
-	cert := &x509.Certificate{
-		SerialNumber: big.NewInt(2),
-		Subject: pkix.Name{
-			Country:            []string{"RU"},
-			Province:           []string{"MO"},
-			Locality:           []string{"Moscow"},
-			Organization:       []string{"Company"},
-			OrganizationalUnit: []string{"Department"},
-			CommonName:         hostname, // Здесь используется параметр hostname
-		},
-		NotBefore:   time.Now(),
-		NotAfter:    time.Now().Add(365 * 24 * time.Hour), // 1 год
-		KeyUsage:    x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
-		DNSNames:    []string{hostname}, // Использование hostname для DNSNames
-	}
+    // Создание нового сертификата
+    cert := &x509.Certificate{
+        SerialNumber: big.NewInt(2),
+        Subject: pkix.Name{
+            Country:            []string{"RU"},
+            Province:           []string{"MO"},
+            Locality:           []string{"Moscow"},
+            Organization:       []string{"Company"},
+            OrganizationalUnit: []string{"Department"},
+            CommonName:         hostname, // Здесь используется параметр hostname
+        },
+        NotBefore:   time.Now(),
+        NotAfter:    time.Now().Add(365 * 24 * time.Hour), // 1 год
+        KeyUsage:    x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+        ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
+        DNSNames:    []string{hostname}, // Использование hostname для DNSNames
+    }
 
-	certDER, err := x509.CreateCertificate(rand.Reader, cert, caCert, &caKey.PublicKey, caKey)
-	if err != nil {
-		return err
-	}
+    // Создаем сертификат, подписанный CA
+    certDER, err := x509.CreateCertificate(rand.Reader, cert, caCert, &caKey.PublicKey, caKey)
+    if err != nil {
+        return err
+    }
 
-	certDir := filepath.Dir(certFile)
-	keyDir := filepath.Dir(keyFile)
+    // Записываем сертификат в файл
+    certDir := filepath.Dir(certFile)
+    keyDir := filepath.Dir(keyFile)
 
-	if err := os.MkdirAll(certDir, 0755); err != nil {
-		return err
-	}
+    if err := os.MkdirAll(certDir, 0755); err != nil {
+        return err
+    }
 
-	certFileHandle, err := os.Create(certFile)
-	if err != nil {
-		return err
-	}
-	defer certFileHandle.Close()
+    certFileHandle, err := os.Create(certFile)
+    if err != nil {
+        return err
+    }
+    defer certFileHandle.Close()
 
-	if err := pem.Encode(certFileHandle, &pem.Block{Type: "CERTIFICATE", Bytes: certDER}); err != nil {
-		return err
-	}
+    if err := pem.Encode(certFileHandle, &pem.Block{Type: "CERTIFICATE", Bytes: certDER}); err != nil {
+        return err
+    }
 
-	if err := os.MkdirAll(keyDir, 0755); err != nil {
-		return err
-	}
+    // Записываем приватный ключ в файл (формат PKCS#1)
+    if err := os.MkdirAll(keyDir, 0755); err != nil {
+        return err
+    }
 
-	keyFileHandle, err := os.Create(keyFile)
-	if err != nil {
-		return err
-	}
-	defer keyFileHandle.Close()
+    keyFileHandle, err := os.Create(keyFile)
+    if err != nil {
+        return err
+    }
+    defer keyFileHandle.Close()
 
-	if err := pem.Encode(keyFileHandle, &pem.Block{Type: "PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(caKey)}); err != nil {
-		return err
-	}
+    if err := pem.Encode(keyFileHandle, &pem.Block{Type: "PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(caKey)}); err != nil {
+        return err
+    }
 
-	return nil
+    return nil
 }
+
 
 func GenerateCA(caFile, caKeyFile string) error {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -285,24 +297,24 @@ func SignCert(serverName string) error {
     return cmd.Run()
 }
 
-func SignData(data []byte) ([]byte, error) {
+func SignData(mess []byte) ([]byte, error) {
     cfg := &commandLine.Config{
         PrivateKeyFile: "cert/ca-keyGOST.pem",
         PublicKeyFile:  "cert/ca-certGOST.pem",
     }
 
-    sourceMessage := data
-    _, publicKeyPEMBytes, privateKeyPEMBytes, err := signByPEMBytes.GetBytes(cfg)
+
+    publicKeyPEMBytes, privateKeyPEMBytes, err := signByPEMBytes.GetBytes(cfg)
     if err != nil {
         return nil, err
     }
 
     signService := sign.New()
-    signedMessagePEMBytes, err := signService.Sign(sourceMessage, publicKeyPEMBytes, privateKeyPEMBytes)
+    signedMessagePEMBytes, err := signService.Sign(mess, publicKeyPEMBytes, privateKeyPEMBytes)
     if err != nil {
         return nil, err
     }
-
+	
     return signedMessagePEMBytes, nil
 }
 
@@ -310,39 +322,75 @@ func ValidateSign( mess []byte, data []byte) (bool, error) {
     cfg := &commandLine.Config{
         PrivateKeyFile: "cert/ca-keyGOST.pem",
         PublicKeyFile:  "cert/ca-certGOST.pem",
-    }
-	sourceMessage := mess
-    _, publicKeyPEMBytes, privateKeyPEMBytes, err := signByPEMBytes.GetBytes(cfg)
-    if err != nil {
-        return false, err
+		MessageFileSign: "pkg/cert/signs/mess",
     }
 
-	//gost3410PrivateKeyFromFile, err := privatekey.DecodePEMFile(cfg.PrivateKeyFile)
-	//if err != nil {
-	//	log.Fatal(ge.Pin(err))
-	//}
+	if err := ioutil.WriteFile("MessageFileSign", data, 0644); err != nil {
+        return false, fmt.Errorf("error writing to file: %w", err)
+    }
+
+    defer func() {
+        if err := ioutil.WriteFile("MessageFileSign", []byte{}, 0644); err != nil {
+            fmt.Println("Error clearing the file:", err)
+        } else {
+            fmt.Println("File cleared successfully.")
+        }
+    }()
+
+	gost3410PrivateKeyFromFile, err := privatekey.DecodePEMFile(cfg.PrivateKeyFile)
+	if err != nil {
+		log.Fatal(ge.Pin(err))
+	}
 
 	certificateList, err := certificate.DecodePEMFile(cfg.PublicKeyFile)
 	if err != nil {
 		log.Fatal(ge.Pin(err))
 	}
-    
 
-    signService := sign.New()
-    signedMessagePEMBytes, err := signService.Sign(sourceMessage, publicKeyPEMBytes, privateKeyPEMBytes)
-    if err != nil {
-        return false, err
-    }
+	messageContainer, err := signedmessage.DecodePEMFile(cfg.MessageFileSign)
+	if err != nil {
+		log.Fatal(ge.Pin(err))
+	}
+
+	gost3410PublicKeyFromPrivate, err := gost3410PrivateKeyFromFile.PublicKey()
+	if err != nil {
+		log.Fatal(ge.Pin(err))
+	}
+
 	gost3410PublicKeyFromFile, err := certificateList[0].TBSCertificate.PublicKeyInfo.GetPublicKey()
 	if err != nil {
 		log.Fatal(ge.Pin(err))
 	}
-	isValidSignCMS, err := gost3410PublicKeyFromFile.VerifyDigest(signedMessagePEMBytes, data)
 
+	reflect.DeepEqual(gost3410PublicKeyFromPrivate, gost3410PublicKeyFromFile)
+		
+
+	digest, err := signgost3410.GetDigest(mess, hash.GostR34112012256)
 	if err != nil {
 		log.Fatal(ge.Pin(err))
 	}
 
+	signDigest, err := gost3410PrivateKeyFromFile.Sign(rand.Reader, digest, nil)
+	if err != nil {
+		log.Fatal(ge.Pin(err))
+	}
 
-    return isValidSignCMS, nil
+	isValidSignDigest, err := gost3410PublicKeyFromFile.VerifyDigest(digest, signDigest)
+	if err != nil {
+		log.Fatal(ge.Pin(err))
+	}
+
+	if isValidSignDigest {
+		return isValidSignDigest, nil
+	} else {
+		log.Fatal("created signature is INVALID")
+	}
+
+	// 7. Проверяем соответствие Подписи загруженной ИЗ ФАЙЛА и Дайджеста при помощи Публичного ключа
+	isValidSignDigestCMS, err := gost3410PublicKeyFromFile.VerifyDigest(digest, messageContainer.GetEncryptedDigest())
+	if err != nil {
+		log.Fatal(ge.Pin(err))
+	}
+
+    return isValidSignDigestCMS, nil
 }

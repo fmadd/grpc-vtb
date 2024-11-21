@@ -6,15 +6,8 @@ import (
 	"github.com/nobuenhombre/suikat/pkg/ge"
 )
 
-func GetBytes(cfg *commandline.Config) (sourceMessage, publicKeyPEMBytes, privateKeyPEMBytes []byte, err error) {
-	// 2.1
-	// Файл с исходным сообщением
-	sourceMessageFile := fico.TxtFile(cfg.MessageFile)
+func GetBytes(cfg *commandline.Config) ( publicKeyPEMBytes, privateKeyPEMBytes []byte, err error) {
 
-	sourceMessage, err = sourceMessageFile.ReadBytes()
-	if err != nil {
-		return nil, nil, nil, ge.Pin(err)
-	}
 
 	// 2.2
 	// Файл публичного ключа в формате PEM
@@ -22,7 +15,7 @@ func GetBytes(cfg *commandline.Config) (sourceMessage, publicKeyPEMBytes, privat
 
 	publicKeyPEMBytes, err = publicKeyFileFile.ReadBytes()
 	if err != nil {
-		return nil, nil, nil, ge.Pin(err)
+		return nil, nil, ge.Pin(err)
 	}
 
 	// 2.3
@@ -31,7 +24,7 @@ func GetBytes(cfg *commandline.Config) (sourceMessage, publicKeyPEMBytes, privat
 
 	privateKeyPEMBytes, err = privateKeyFile.ReadBytes()
 	if err != nil {
-		return nil, nil, nil, ge.Pin(err)
+		return  nil, nil, ge.Pin(err)
 	}
 
 	return

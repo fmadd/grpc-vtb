@@ -27,7 +27,7 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCSR("auth", "localhost")
+		//err = cert.GenerateCSR("auth", "localhost")
 		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "auth")
 		
 		if err != nil {

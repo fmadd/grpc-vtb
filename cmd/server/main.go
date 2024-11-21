@@ -114,6 +114,7 @@ func main() {
 	}
 	if *tlsEnabled {
 		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "localhost")
+		
 		//err = cert.GenerateCSR("gatewayService", "localhost")
 
 		if err != nil {
@@ -185,15 +186,15 @@ func SignatureValidationInterceptor(
     if err != nil {
         return nil, grpc.Errorf(codes.Internal, "failed to marshal request")
     }
-
-    // Декодируем подпись
+	//fmt.Println(messageBytes)
     signatureBytes, err := base64.StdEncoding.DecodeString(signatureEncoded)
     if err != nil {
         return nil, grpc.Errorf(codes.Unauthenticated, "invalid signature encoding")
     }
+	//fmt.Println(signatureBytes)
 
-   
-    isValid, err := cert.ValidateSign(messageBytes, signatureBytes)
+   _ = signatureBytes
+    isValid, err := cert.ValidateSign(messageBytes, []byte(signatureEncoded))
     if !isValid {
         return nil, grpc.Errorf(codes.Unauthenticated, "invalid signature")
     }

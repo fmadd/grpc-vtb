@@ -2877,3 +2877,44 @@
 {"level":"FATAL","timestamp":"2024-11-21T15:36:54.594+0300","msg":"!!error generating certificate","error":"open ./cert/gatewayService/certFile.pem: permission denied"}
 {"level":"FATAL","timestamp":"2024-11-21T15:37:24.433+0300","msg":"error sign certificate","error":"exit status 1"}
 {"level":"INFO","timestamp":"2024-11-21T15:41:32.631+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T15:42:32.171+0300","msg":"failed to listen","error":"listen tcp :50051: bind: address already in use"}
+{"level":"FATAL","timestamp":"2024-11-21T15:42:47.275+0300","msg":"!!error generating certificate","error":"open ./cert/gatewayService/certFile.pem: permission denied"}
+{"level":"INFO","timestamp":"2024-11-21T15:42:58.644+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T15:43:05.832+0300","msg":"error generating certificate","error":"open ./cert/client/certFile.pem: permission denied"}
+{"level":"FATAL","timestamp":"2024-11-21T15:43:28.839+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T15:44:52.528+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-21T15:45:25.654+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-21T15:47:09.119+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T15:47:25.845+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T22:45:34.620+0300","msg":"Starting user server on port :8081... (TLS enabled:","tlsEnabled":true}
+{"level":"INFO","timestamp":"2024-11-21T22:45:51.156+0300","msg":"Starting user server on port :50053... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T22:46:01.924+0300","msg":"failed to listen","error":"listen tcp :50053: bind: address already in use"}
+{"level":"INFO","timestamp":"2024-11-21T22:46:12.001+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T22:46:23.900+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Internal desc = failed to sign data: CreatedAt[ 2024-11-21 22:46:23.900581345 +0300 MSK m=+0.002311398 ], Way[ github.com/grpc-vtb/pkg/signbypembytes : GetBytes(), file signbypembytes.go line 16 ], ParentError[ open : no such file or directory ]"}
+{"level":"FATAL","timestamp":"2024-11-21T22:58:22.977+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unauthenticated desc = invalid signature"}
+{"level":"INFO","timestamp":"2024-11-21T23:02:07.473+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:02:10.967+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T23:03:30.812+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:03:33.982+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T23:04:09.522+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:04:12.157+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T23:07:09.829+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:07:12.172+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T23:08:59.104+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:09:01.342+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T23:09:31.126+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:09:33.192+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T23:09:50.844+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:09:52.990+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T23:14:48.350+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:14:50.644+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T23:16:20.984+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:16:23.020+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T23:17:02.223+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:17:04.318+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Internal desc = failed to sign data: invalid signature length: expected 64 bytes, got 1594 bytes"}
+{"level":"FATAL","timestamp":"2024-11-21T23:38:02.279+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Internal desc = failed to sign data: invalid signature length: expected 64 bytes, got 1594 bytes"}
+{"level":"FATAL","timestamp":"2024-11-21T23:40:04.831+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Internal desc = failed to sign data: invalid signature length: expected 64 bytes, got 1594 bytes"}
+{"level":"FATAL","timestamp":"2024-11-21T23:40:19.543+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error reading from server: EOF"}
+{"level":"INFO","timestamp":"2024-11-21T23:40:23.065+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}
+{"level":"FATAL","timestamp":"2024-11-21T23:51:04.582+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Internal desc = failed to sign data: invalid signature length: expected 64 bytes, got 1594 bytes"}
+{"level":"FATAL","timestamp":"2024-11-21T23:53:16.213+0300","msg":"Ошибка при создании пользователя","error":"rpc error: code = Unavailable desc = error with reg user in auth-service: rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing: dial tcp: lookup user on 127.0.0.53:53: server misbehaving\""}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/base64"
 	"flag"
 	"fmt"
@@ -16,7 +15,9 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+	"context"
 )
 
 const (
@@ -28,15 +29,15 @@ const (
 
 func main() {
 	tlsEnabled := flag.Bool("tls", true, "Enable TLS (default: false)")
+	clientID := flag.String("client-id", "client123", "Client ID for signing requests")
 	flag.Parse()
 
 	var creds credentials.TransportCredentials
 	var err error
-	//interceptor := SignatureInterceptor("unique-client-id")
+	interceptor := SignatureInterceptor(*clientID)
 
 	if *tlsEnabled {
 		err = cert.GenerateCertificate(clientCertFile, clientKeyFile, "localhost")
-		//err = cert.GenerateCSR("client", "localhost")
 		if err != nil {
 			logger.Logger.Fatal("error generating certificate", zap.Error(err))
 		}
@@ -48,7 +49,7 @@ func main() {
 
 	var conn *grpc.ClientConn
 	if *tlsEnabled {
-		conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds))//, grpc.WithUnaryInterceptor(interceptor))
+		conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds), grpc.WithUnaryInterceptor(interceptor))
 	} else {
 		conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
@@ -62,15 +63,13 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	
 
 	createUserRequest := &pb.CreateUserRequest{
 		Username: "testusr",
 		Email:    "testusr@example.com",
-		Password: "secureassword",
+		Password: "securepassword",
 	}
 
-	
 	createUserResponse, err := client.CreateUser(ctx, createUserRequest)
 	if err != nil {
 		logger.Logger.Fatal("Ошибка при создании пользователя", zap.Error(err))
@@ -171,32 +170,41 @@ func main() {
 
 }
 
-func SignatureInterceptor(ctx context.Context,
-    req interface{},
-    info *grpc.UnaryServerInfo,
-    handler grpc.UnaryHandler,
-	) (interface{}, error) {
-	messageBytes, err := proto.Marshal(req.(proto.Message))
-	if err != nil {
-        return nil, grpc.Errorf(codes.Internal, "failed to marshal request")
+func SignatureInterceptor(clientID string) grpc.UnaryClientInterceptor {
+    return func(
+        ctx context.Context, method string, req, reply interface{},
+        cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption,
+    ) (err error)  {
+        msg, ok := req.(proto.Message)
+        if !ok {
+            return status.Errorf(codes.Internal, "request is not a proto.Message")
+        }
 
-	}
+        messageBytes, err := proto.Marshal(msg)
+        if err != nil {
+            return status.Errorf(codes.Internal, "failed to marshal request: %v", err)
+        }
+		//fmt.Println(messageBytes)
 
-	signature, err := cert.SignData(messageBytes)
-	if err != nil {
-        return nil, grpc.Errorf(codes.Internal, "failed to marshal request")
-	
-	}
+        signature, err := cert.SignData(messageBytes)
+        if err != nil {
+            return status.Errorf(codes.Internal, "failed to sign data: %v", err)
+        }
+        signatureEncoded := base64.StdEncoding.EncodeToString([]byte(signature))
 
-	signatureEncoded := base64.StdEncoding.EncodeToString([]byte(signature))
+        md := metadata.New(map[string]string{
+            "signature": signatureEncoded,
+            "client-id": clientID,
+        })
+		//fmt.Println(signature)
 
-	md := metadata.New(map[string]string{
-		"signature": signatureEncoded,
-		"client-id": "client-id",
-	})
+        ctx = metadata.NewOutgoingContext(ctx, md)
 
-	ctx = metadata.NewOutgoingContext(ctx, md)
+        err = invoker(ctx, method, req, reply, cc, opts...)
+        if err != nil {
+            return err
+        }
 
-	return handler(ctx, req)
-    
+        return nil
+    }
 }
