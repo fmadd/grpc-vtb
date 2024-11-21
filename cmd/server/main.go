@@ -12,6 +12,7 @@ import (
 	"github.com/grpc-vtb/internal/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
@@ -124,8 +125,7 @@ func main() {
 		logger.Logger.Fatal("error generating ca certificate", zap.Error(err))
 	}
 	if *tlsEnabled {
-		//err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "localhost")
-
+		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "localhost")
 		err = cert.GenerateCSR("gatewayService", "localhost")
 
 		if err != nil {
@@ -155,7 +155,7 @@ func main() {
 
 	userClient := userPb.NewUserServiceClient(userConn)
 
-	serverOpts := []grpc.ServerOption{}
+	serverOpts := []grpc.ServerOption{grpc.UnaryInterceptor(SignatureValidationInterceptor)}
 	if *tlsEnabled {
 		serverOpts = append(serverOpts, grpc.Creds(serverCreds))
 	}
@@ -178,3 +178,43 @@ func main() {
 	}
 }
 
+
+func SignatureValidationInterceptor(
+    ctx context.Context,
+    req interface{},
+    info *grpc.UnaryServerInfo,
+    handler grpc.UnaryHandler,
+) (interface{}, error) {
+	message, ok := req.(proto.Message) // Попробуем привести request к proto.Message
+    if !ok {
+        return nil, grpc.Errorf(codes.Internal, "request does not implement proto.Message")
+    }
+    // Извлекаем метаданные
+    md, ok := metadata.FromIncomingContext(ctx)
+    if !ok {
+        return nil, grpc.Errorf(codes.Unauthenticated, "missing metadata")
+    }
+
+    signatureEncoded := md["signature"][0] // Получаем подпись из метаданных
+
+    // Преобразуем запрос в байты (можно использовать любую сериализацию, которую вы используете)
+    messageBytes, err := proto.Marshal(message) // Ваша логика сериализации
+    if err != nil {
+        return nil, grpc.Errorf(codes.Internal, "failed to marshal request")
+    }
+
+    // Декодируем подпись
+    signatureBytes, err := base64.StdEncoding.DecodeString(signatureEncoded)
+    if err != nil {
+        return nil, grpc.Errorf(codes.Unauthenticated, "invalid signature encoding")
+    }
+
+   
+    isValid, err := cert.ValidateSign(messageBytes, signatureBytes)
+    if !isValid {
+        return nil, grpc.Errorf(codes.Unauthenticated, "invalid signature")
+    }
+
+    // Вызовите следующий обработчик
+    return handler(ctx, req)
+}

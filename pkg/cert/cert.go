@@ -272,16 +272,16 @@ func GenerateCSR(serverName string, hostname string) error {
     }
     cmd := exec.Command("openssl", "req", "-new", "-newkey", "gost2012_256",
         "-pkeyopt", "paramset:A", "-nodes",
-        "-keyout", fmt.Sprintf("cert/%s/keyFile.pem", serverName), "-out", fmt.Sprintf("cert/%s/certFile.pem", serverName),
+        "-keyout", fmt.Sprintf("cert/%s/keyFileGOST.pem", serverName), "-out", fmt.Sprintf("cert/%s/certFileGOST.pem", serverName),
         "-subj", fmt.Sprintf("/C=RU/ST=MO/L=Moscow/O=Company/OU=Department/CN=%s/keyUsage=digitalSignature,keyEncipherment,keyAgreement/extendedKeyUsage=serverAuth,clientAuth/subjectAltName=DNS:%s", hostname, hostname))
     return cmd.Run()
 }
 
 func SignCert(serverName string) error {
 
-    cmd := exec.Command("openssl", "x509", "-req", "-in",  fmt.Sprintf("cert/%s/certFile.pem", serverName),
+    cmd := exec.Command("openssl", "x509", "-req", "-in",  fmt.Sprintf("cert/%s/certFileGOST.pem", serverName),
         "-CA", "cert/ca-cert.pem", "-CAkey", "cert/ca-key.pem",
-        "-CAcreateserial", "-out", fmt.Sprintf("cert/%s/certFile.pem", serverName), "-days", "365", "-md_gost12_256")
+        "-CAcreateserial", "-out", fmt.Sprintf("cert/%s/certFileGOST.pem", serverName), "-days", "365", "-md_gost12_256")
     return cmd.Run()
 }
 

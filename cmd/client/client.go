@@ -12,6 +12,7 @@ import (
 	"github.com/grpc-vtb/pkg/cert"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -31,9 +32,10 @@ func main() {
 
 	var creds credentials.TransportCredentials
 	var err error
+	//interceptor := SignatureInterceptor("unique-client-id")
 
 	if *tlsEnabled {
-		//err = cert.GenerateCertificate(clientCertFile, clientKeyFile, "localhost")
+		err = cert.GenerateCertificate(clientCertFile, clientKeyFile, "localhost")
 		err = cert.GenerateCSR("client", "localhost")
 		if err != nil {
 			logger.Logger.Fatal("error generating certificate", zap.Error(err))
@@ -46,7 +48,7 @@ func main() {
 
 	var conn *grpc.ClientConn
 	if *tlsEnabled {
-		conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds))
+		conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds))//, grpc.WithUnaryInterceptor(interceptor))
 	} else {
 		conn, err = grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
@@ -67,20 +69,6 @@ func main() {
 		Email:    "testusr@example.com",
 		Password: "secureassword",
 	}
-
-	
-	data, err := proto.Marshal(createUserRequest)
-
-	signature, err := cert.SignData(data)
-	
-    signatureEncoded := base64.StdEncoding.EncodeToString([]byte(signature))
-
-	md := metadata.New(map[string]string{
-	"signature": signatureEncoded,
-	"client-id": "unique-client-id",
-	})
-
-	ctx = metadata.NewOutgoingContext(context.Background(), md)
 
 	
 	createUserResponse, err := client.CreateUser(ctx, createUserRequest)
@@ -181,4 +169,34 @@ func main() {
 	elapsedTime := time.Since(startTime)
 	logger.Logger.Info(fmt.Sprintf("Отправлено %d запросов за %v", numRequests, elapsedTime))
 
+}
+
+func SignatureInterceptor(ctx context.Context,
+    req interface{},
+    info *grpc.UnaryServerInfo,
+    handler grpc.UnaryHandler,
+	) (interface{}, error) {
+	messageBytes, err := proto.Marshal(req.(proto.Message))
+	if err != nil {
+        return nil, grpc.Errorf(codes.Internal, "failed to marshal request")
+
+	}
+
+	signature, err := cert.SignData(messageBytes)
+	if err != nil {
+        return nil, grpc.Errorf(codes.Internal, "failed to marshal request")
+	
+	}
+
+	signatureEncoded := base64.StdEncoding.EncodeToString([]byte(signature))
+
+	md := metadata.New(map[string]string{
+		"signature": signatureEncoded,
+		"client-id": "client-id",
+	})
+
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	return handler(ctx, req)
+    
 }
