@@ -16,7 +16,13 @@ import (
 	"time"
 
 	"google.golang.org/grpc/credentials"
-  
+
+	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/oids"
+	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/oids/curves"
+	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/oids/hash"
+	 
+	signgost3410 "github.com/grpc-vtb/pkg/singgost3410"
+	"github.com/nobuenhombre/suikat/pkg/ge"
 )
 
 const (
@@ -274,4 +280,50 @@ func SignCert(serverName string) error {
         "-CA", "cert/ca-cert.pem", "-CAkey", "cert/ca-key.pem",
         "-CAcreateserial", "-out", fmt.Sprintf("cert/%s/certFile.pem", serverName), "-days", "365", "-md_gost12_256")
     return cmd.Run()
+}
+
+func SignData(data []byte) ([]byte, error) {
+
+    // 1. Создаем Хеш Данных - Дайджест
+    digest, err := signgost3410.GetDigest(data, hash.GostR34112012256)
+    if err != nil {
+        return nil, ge.Pin(err)
+    }
+
+    // 2. Создаем кривую
+    curveOid := oids.Tc26Gost34102012256ParamSetB
+    curve, err := curves.Get(curveOid)
+    if err != nil {
+        return nil, ge.Pin(err)
+    }
+
+    // 3. Генерируем Приватный ключ
+    privateKey, err := signgost3410.GeneratePrivateKey(curve)
+    if err != nil {
+        return nil, ge.Pin(err)
+    }
+
+    // 4. Извлекаем из Приватного ключа -> Публичный
+    publicKeyGost, err := signgost3410.ExtractPublicKeyGOST(curve, privateKey)
+    if err != nil {
+        return nil, ge.Pin(err)
+    }
+
+    // 5. Подписываем Дайджест (хеш от данных) Приватным Ключом
+    signDigest, err := privateKey.Sign(rand.Reader, digest, nil)
+    if err != nil {
+        return nil, ge.Pin(err)
+    }
+
+    // 6. Проверяем соответствие Подписи и Дайджеста при помощи Публичного ключа
+    isValidSignDigest, err := publicKeyGost.VerifyDigest(digest, signDigest)
+    if err != nil {
+        return nil, ge.Pin(err)
+    }
+
+    if !isValidSignDigest {
+        return nil, fmt.Errorf("signature digest is invalid")
+    }
+
+    return signDigest, nil
 }

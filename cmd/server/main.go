@@ -2,16 +2,20 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"flag"
 	"fmt"
-	"github.com/grpc-vtb/cmd/ratelimiter"
 	"net"
+
+	"github.com/grpc-vtb/cmd/ratelimiter"
 
 	"github.com/grpc-vtb/internal/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/proto"
 
 	pb "github.com/grpc-vtb/api/proto/gen"
 	userPb "github.com/grpc-vtb/internal/user/proto"
@@ -24,11 +28,27 @@ type server struct {
 }
 
 func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	tokenResponse, err := s.userClient.CreateUser(ctx, &userPb.CreateUserRequest{
+	ans := &userPb.CreateUserRequest{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
+	}
+	data, err := proto.Marshal(ans)
+
+	signature, err := cert.SignData(data)
+	
+    signatureEncoded := base64.StdEncoding.EncodeToString([]byte(signature))
+
+	md := metadata.New(map[string]string{
+	"signature": signatureEncoded,
+	"client-id": "unique-client-id",
 	})
+
+	ctx = metadata.NewOutgoingContext(context.Background(), md)
+
+	
+	
+	tokenResponse, err := s.userClient.CreateUser(ctx, ans)
 	if err != nil {
 		return nil, fmt.Errorf("error with reg user in auth-service: %w", err)
 	}
@@ -79,7 +99,6 @@ const (
 func main() {
 	tlsEnabled := flag.Bool("tls", true, "Enable TLS (default: false)")
 	flag.Parse()
-	
 
 	var serverCreds, creds credentials.TransportCredentials
 	var err error
@@ -141,3 +160,4 @@ func main() {
 		logger.Logger.Fatal("failed to serve", zap.Error(err))
 	}
 }
+

@@ -2871,3 +2871,4 @@
 {"level":"FATAL","timestamp":"2024-11-21T01:58:47.937+0300","msg":"!!error generating certificate","error":"exit status 1"}
 {"level":"FATAL","timestamp":"2024-11-21T01:59:27.102+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
 {"level":"FATAL","timestamp":"2024-11-21T01:59:53.678+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
+{"level":"FATAL","timestamp":"2024-11-21T03:02:55.326+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
