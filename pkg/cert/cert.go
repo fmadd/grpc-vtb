@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"os"
 	"os/exec"
@@ -17,11 +18,13 @@ import (
 
 	"google.golang.org/grpc/credentials"
 
-	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/oids"
-	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/oids/curves"
-	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/oids/hash"
-	 
-	signgost3410 "github.com/grpc-vtb/pkg/singgost3410"
+	commandLine "github.com/grpc-vtb/pkg/commandline"
+	signByPEMBytes "github.com/grpc-vtb/pkg/signbypembytes"
+
+	//signgost3410 "github.com/grpc-vtb/pkg/singgost3410"
+	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/containers/certificate"
+	//privatekey "github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/containers/private-key"
+	"github.com/nobuenhombre/go-crypto-gost/pkg/crypto-message/services/sign"
 	"github.com/nobuenhombre/suikat/pkg/ge"
 )
 
@@ -283,47 +286,63 @@ func SignCert(serverName string) error {
 }
 
 func SignData(data []byte) ([]byte, error) {
+    cfg := &commandLine.Config{
+        PrivateKeyFile: "cert/ca-key.pem",
+        PublicKeyFile:  "cert/ca-cert.pem",
+    }
 
-    // 1. Создаем Хеш Данных - Дайджест
-    digest, err := signgost3410.GetDigest(data, hash.GostR34112012256)
+    sourceMessage := data
+    _, publicKeyPEMBytes, privateKeyPEMBytes, err := signByPEMBytes.GetBytes(cfg)
     if err != nil {
-        return nil, ge.Pin(err)
+        return nil, err
     }
 
-    // 2. Создаем кривую
-    curveOid := oids.Tc26Gost34102012256ParamSetB
-    curve, err := curves.Get(curveOid)
+    signService := sign.New()
+    signedMessagePEMBytes, err := signService.Sign(sourceMessage, publicKeyPEMBytes, privateKeyPEMBytes)
     if err != nil {
-        return nil, ge.Pin(err)
+        return nil, err
     }
 
-    // 3. Генерируем Приватный ключ
-    privateKey, err := signgost3410.GeneratePrivateKey(curve)
+    return signedMessagePEMBytes, nil
+}
+
+func ValidateSign( mess []byte, data []byte) (bool, error) {
+    cfg := &commandLine.Config{
+        PrivateKeyFile: "cert/ca-key.pem",
+        PublicKeyFile:  "cert/ca-cert.pem",
+    }
+	sourceMessage := mess
+    _, publicKeyPEMBytes, privateKeyPEMBytes, err := signByPEMBytes.GetBytes(cfg)
     if err != nil {
-        return nil, ge.Pin(err)
+        return false, err
     }
 
-    // 4. Извлекаем из Приватного ключа -> Публичный
-    publicKeyGost, err := signgost3410.ExtractPublicKeyGOST(curve, privateKey)
+	//gost3410PrivateKeyFromFile, err := privatekey.DecodePEMFile(cfg.PrivateKeyFile)
+	//if err != nil {
+	//	log.Fatal(ge.Pin(err))
+	//}
+
+	certificateList, err := certificate.DecodePEMFile(cfg.PublicKeyFile)
+	if err != nil {
+		log.Fatal(ge.Pin(err))
+	}
+    
+
+    signService := sign.New()
+    signedMessagePEMBytes, err := signService.Sign(sourceMessage, publicKeyPEMBytes, privateKeyPEMBytes)
     if err != nil {
-        return nil, ge.Pin(err)
+        return false, err
     }
+	gost3410PublicKeyFromFile, err := certificateList[0].TBSCertificate.PublicKeyInfo.GetPublicKey()
+	if err != nil {
+		log.Fatal(ge.Pin(err))
+	}
+	isValidSignCMS, err := gost3410PublicKeyFromFile.VerifyDigest(signedMessagePEMBytes, data)
 
-    // 5. Подписываем Дайджест (хеш от данных) Приватным Ключом
-    signDigest, err := privateKey.Sign(rand.Reader, digest, nil)
-    if err != nil {
-        return nil, ge.Pin(err)
-    }
+	if err != nil {
+		log.Fatal(ge.Pin(err))
+	}
 
-    // 6. Проверяем соответствие Подписи и Дайджеста при помощи Публичного ключа
-    isValidSignDigest, err := publicKeyGost.VerifyDigest(digest, signDigest)
-    if err != nil {
-        return nil, ge.Pin(err)
-    }
 
-    if !isValidSignDigest {
-        return nil, fmt.Errorf("signature digest is invalid")
-    }
-
-    return signDigest, nil
+    return isValidSignCMS, nil
 }

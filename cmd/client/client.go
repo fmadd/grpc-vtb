@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"time"
@@ -13,6 +14,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -57,12 +60,29 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
+	
 
 	createUserRequest := &pb.CreateUserRequest{
 		Username: "testusr",
 		Email:    "testusr@example.com",
 		Password: "secureassword",
 	}
+
+	
+	data, err := proto.Marshal(createUserRequest)
+
+	signature, err := cert.SignData(data)
+	
+    signatureEncoded := base64.StdEncoding.EncodeToString([]byte(signature))
+
+	md := metadata.New(map[string]string{
+	"signature": signatureEncoded,
+	"client-id": "unique-client-id",
+	})
+
+	ctx = metadata.NewOutgoingContext(context.Background(), md)
+
+	
 	createUserResponse, err := client.CreateUser(ctx, createUserRequest)
 	if err != nil {
 		logger.Logger.Fatal("Ошибка при создании пользователя", zap.Error(err))
