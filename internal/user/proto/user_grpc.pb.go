@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_CreateUser_FullMethodName   = "/user.UserService/CreateUser"
-	UserService_LoginUser_FullMethodName    = "/user.UserService/LoginUser"
-	UserService_ValidateUser_FullMethodName = "/user.UserService/ValidateUser"
+	UserService_CreateUser_FullMethodName       = "/user.UserService/CreateUser"
+	UserService_LoginUser_FullMethodName        = "/user.UserService/LoginUser"
+	UserService_ValidateUser_FullMethodName     = "/user.UserService/ValidateUser"
+	UserService_RefreshUserToken_FullMethodName = "/user.UserService/RefreshUserToken"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -31,6 +32,7 @@ type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	LoginUser(ctx context.Context, in *UserLoginRequest, opts ...grpc.CallOption) (*UserLoginResponse, error)
 	ValidateUser(ctx context.Context, in *TokenRequest, opts ...grpc.CallOption) (*RoleResponse, error)
+	RefreshUserToken(ctx context.Context, in *RefreshUserTokenRequest, opts ...grpc.CallOption) (*RefreshUserTokenResponse, error)
 }
 
 type userServiceClient struct {
@@ -71,6 +73,16 @@ func (c *userServiceClient) ValidateUser(ctx context.Context, in *TokenRequest, 
 	return out, nil
 }
 
+func (c *userServiceClient) RefreshUserToken(ctx context.Context, in *RefreshUserTokenRequest, opts ...grpc.CallOption) (*RefreshUserTokenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RefreshUserTokenResponse)
+	err := c.cc.Invoke(ctx, UserService_RefreshUserToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -78,6 +90,7 @@ type UserServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	LoginUser(context.Context, *UserLoginRequest) (*UserLoginResponse, error)
 	ValidateUser(context.Context, *TokenRequest) (*RoleResponse, error)
+	RefreshUserToken(context.Context, *RefreshUserTokenRequest) (*RefreshUserTokenResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -96,6 +109,9 @@ func (UnimplementedUserServiceServer) LoginUser(context.Context, *UserLoginReque
 }
 func (UnimplementedUserServiceServer) ValidateUser(context.Context, *TokenRequest) (*RoleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidateUser not implemented")
+}
+func (UnimplementedUserServiceServer) RefreshUserToken(context.Context, *RefreshUserTokenRequest) (*RefreshUserTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshUserToken not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -172,6 +188,24 @@ func _UserService_ValidateUser_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_RefreshUserToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshUserTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).RefreshUserToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_RefreshUserToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).RefreshUserToken(ctx, req.(*RefreshUserTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +224,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ValidateUser",
 			Handler:    _UserService_ValidateUser_Handler,
+		},
+		{
+			MethodName: "RefreshUserToken",
+			Handler:    _UserService_RefreshUserToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
