@@ -8,11 +8,8 @@ services:
       dockerfile: ./opt/keycloak-26.0.5/Dockerfile
     ports:
       - "8080:8080"
-
-
     networks:
       - grpc-network
-
 
   auth:
     build:
@@ -49,10 +46,27 @@ services:
       - USER_SERVICE_URL=user:50053
     ports:
       - "50051:50051"
+    volumes:
+      - certs:/etc/ssl/certs
     networks:
       - grpc-network
 
+  nginx:
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile
+    volumes:
+      - certs:/etc/nginx/cert
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - grpc-network
 
 networks:
   grpc-network:
     driver: bridge
+
+volumes:
+  certs:  
