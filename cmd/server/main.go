@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/grpc-vtb/cmd/ratelimiter"
+	 _"github.com/grpc-vtb/cmd/ratelimiter"
 
 	"github.com/grpc-vtb/internal/logger"
 	"go.uber.org/zap"
@@ -34,20 +34,6 @@ func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 		Email:    req.Email,
 		Password: req.Password,
 	}
-	data, err := proto.Marshal(ans)
-
-	signature, err := cert.SignData(data)
-	
-    signatureEncoded := base64.StdEncoding.EncodeToString([]byte(signature))
-
-	md := metadata.New(map[string]string{
-	"signature": signatureEncoded,
-	"client-id": "unique-client-id",
-	})
-
-	ctx = metadata.NewOutgoingContext(context.Background(), md)
-
-	
 	
 	tokenResponse, err := s.userClient.CreateUser(ctx, ans)
 	if err != nil {
@@ -121,20 +107,17 @@ func main() {
 	var serverCreds, creds credentials.TransportCredentials
 	var err error
 	err = cert.GenerateCACert("localhost")
+	err = cert.GenerateCA("./cert/ca-cert.pem", "./cert/ca-key.pem")
+
 	if err != nil {
 		logger.Logger.Fatal("error generating ca certificate", zap.Error(err))
 	}
 	if *tlsEnabled {
 		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "localhost")
-		err = cert.GenerateCSR("gatewayService", "localhost")
+		//err = cert.GenerateCSR("gatewayService", "localhost")
 
 		if err != nil {
 			logger.Logger.Fatal("!!error generating certificate", zap.Error(err))
-		}
-
-		err = cert.SignCert("gatewayService")
-		if err != nil {
-			logger.Logger.Fatal("error sign certificate", zap.Error(err))
 		}
 
 		serverCreds, err = cert.NewServerTLS(serverCertFile, serverKeyFile)
@@ -160,7 +143,7 @@ func main() {
 		serverOpts = append(serverOpts, grpc.Creds(serverCreds))
 	}
 
-	serverOpts = append(serverOpts, grpc.UnaryInterceptor(ratelimiter.RateLimitInterceptor))
+	//serverOpts = append(serverOpts, grpc.UnaryInterceptor(ratelimiter.RateLimitInterceptor))
 
 	srv := grpc.NewServer(serverOpts...)
 	pb.RegisterUserServiceServer(srv, &server{userClient: userClient})

@@ -2872,3 +2872,8 @@
 {"level":"FATAL","timestamp":"2024-11-21T01:59:27.102+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
 {"level":"FATAL","timestamp":"2024-11-21T01:59:53.678+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
 {"level":"FATAL","timestamp":"2024-11-21T03:02:55.326+0300","msg":"!!failed to load key pair","error":"failed to load server certificate and key: tls: failed to parse private key"}
+{"level":"FATAL","timestamp":"2024-11-21T15:28:58.606+0300","msg":"error generating certificate","error":"failed to parse CA private key: x509: PKCS#8 wrapping contained private key with unknown algorithm: 1.2.643.7.1.1.1.1"}
+{"level":"FATAL","timestamp":"2024-11-21T15:36:18.255+0300","msg":"!!error generating certificate","error":"exit status 1"}
+{"level":"FATAL","timestamp":"2024-11-21T15:36:54.594+0300","msg":"!!error generating certificate","error":"open ./cert/gatewayService/certFile.pem: permission denied"}
+{"level":"FATAL","timestamp":"2024-11-21T15:37:24.433+0300","msg":"error sign certificate","error":"exit status 1"}
+{"level":"INFO","timestamp":"2024-11-21T15:41:32.631+0300","msg":"Starting gRPC server on port :50051... (TLS enabled:","tlsEnabled":true}

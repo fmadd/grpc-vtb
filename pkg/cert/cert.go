@@ -261,7 +261,7 @@ func GenerateCA(caFile, caKeyFile string) error {
 func GenerateCACert(hostname string) error {
     cmd := exec.Command("openssl", "req", "-x509", "-newkey", "gost2012_256",
         "-pkeyopt", "paramset:A", "-nodes",
-        "-keyout", "cert/ca-key.pem", "-out", "cert/ca-cert.pem",
+        "-keyout", "cert/ca-keyGOST.pem", "-out", "cert/ca-certGOST.pem",
         "-md_gost12_256", "-days", "3650", "-subj", fmt.Sprintf("/C=RU/ST=MO/L=Moscow/O=Company/OU=Department/CN=%s/keyUsage=digitalSignature,keyEncipherment/extendedKeyUsage=serverAuth,clientAuth/subjectAltName=DNS:%s", hostname, hostname))
     return cmd.Run()
 }
@@ -280,15 +280,15 @@ func GenerateCSR(serverName string, hostname string) error {
 func SignCert(serverName string) error {
 
     cmd := exec.Command("openssl", "x509", "-req", "-in",  fmt.Sprintf("cert/%s/certFileGOST.pem", serverName),
-        "-CA", "cert/ca-cert.pem", "-CAkey", "cert/ca-key.pem",
+        "-CA", "cert/ca-certGOST.pem", "-CAkey", "cert/ca-keyGOST.pem",
         "-CAcreateserial", "-out", fmt.Sprintf("cert/%s/certFileGOST.pem", serverName), "-days", "365", "-md_gost12_256")
     return cmd.Run()
 }
 
 func SignData(data []byte) ([]byte, error) {
     cfg := &commandLine.Config{
-        PrivateKeyFile: "cert/ca-key.pem",
-        PublicKeyFile:  "cert/ca-cert.pem",
+        PrivateKeyFile: "cert/ca-keyGOST.pem",
+        PublicKeyFile:  "cert/ca-certGOST.pem",
     }
 
     sourceMessage := data
@@ -308,8 +308,8 @@ func SignData(data []byte) ([]byte, error) {
 
 func ValidateSign( mess []byte, data []byte) (bool, error) {
     cfg := &commandLine.Config{
-        PrivateKeyFile: "cert/ca-key.pem",
-        PublicKeyFile:  "cert/ca-cert.pem",
+        PrivateKeyFile: "cert/ca-keyGOST.pem",
+        PublicKeyFile:  "cert/ca-certGOST.pem",
     }
 	sourceMessage := mess
     _, publicKeyPEMBytes, privateKeyPEMBytes, err := signByPEMBytes.GetBytes(cfg)
