@@ -1,3 +1,3 @@
 cert/*/*.pem
 cert/*.pem
-cmd/prometheus/data/*
+cmd/prometheus/data
