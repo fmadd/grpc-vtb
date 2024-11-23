@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/grpc-vtb/cmd/ratelimiter"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc/reflection"
@@ -205,6 +206,7 @@ func main() {
 	if *tlsEnabled {
 		serverOpts = append(serverOpts, grpc.Creds(serverCreds))
 	}
+	serverOpts = append(serverOpts, grpc.UnaryInterceptor(ratelimiter.RateLimitInterceptor))
 
 	srv := grpc.NewServer(serverOpts...)
 	pb.RegisterUserServiceServer(srv, &server{userClient: userClient})
