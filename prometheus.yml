@@ -7,11 +7,11 @@ scrape_configs:
     scrape_interval: 5s
     scheme: https
     tls_config:
-      cert_file: "../../cert/client/certFile.pem"
-      key_file: "../../cert/client/keyFile.pem"
-      ca_file: "../../cert/ca-cert.pem"
+      cert_file: "./cert/client/certFile.pem"
+      key_file: "./cert/client/keyFile.pem"
+      ca_file: "./cert/ca-cert.pem"
       insecure_skip_verify: true
 
     static_configs:
       - targets:
-          - "localhost:8010"
+          - "central-grpc-server:8010"

@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	serverAddr     = "localhost:50051"
+	serverAddr     = "central-grpc-server:50051"
 	clientCertFile = "./cert/client/certFile.pem"
 	clientKeyFile  = "./cert/client/keyFile.pem"
 )
@@ -120,7 +120,6 @@ func (s *apiServer) createUserHandler(w http.ResponseWriter, r *http.Request) {
 	req.Email = email
 	req.Password = password
 
-	logger.Logger.Info(req.Username)
 	resp, err := s.client.CreateUser(context.Background(), &req)
 	if err != nil {
 		http.Error(w, "Error creating user: "+err.Error(), http.StatusInternalServerError)
@@ -173,14 +172,12 @@ func (s *apiServer) validateUserHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	logger.Logger.Info(req.AccessToken)
 	AccessToken, AccessTokenChanged := sanitizeInput(req.AccessToken)
 	if AccessTokenChanged {
 		http.Error(w, "error-token-invalid-character", http.StatusBadRequest)
 		return
 	}
 	req.AccessToken = AccessToken
-	logger.Logger.Info(req.AccessToken)
 	resp, err := s.client.ValidateUser(context.Background(), &req)
 	if err != nil {
 		http.Error(w, "Error validating user: "+err.Error(), http.StatusInternalServerError)

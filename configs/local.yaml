@@ -1,7 +1,0 @@
-env: "local"
-storage_path: "..."
-token_ttl: 1h
-grpc:
-  port: 50051
-  cert_path: "./sert"
-  timeout: 1h

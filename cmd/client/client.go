@@ -1,3 +1,4 @@
+// файл для локального тестирования сервиса без gateway
 package main
 
 import (
@@ -28,7 +29,7 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(clientCertFile, clientKeyFile, "localhost")
+		err = cert.GenerateCertificate(clientCertFile, clientKeyFile, "central-grpc-server")
 		if err != nil {
 			logger.Logger.Fatal("error generating certificate", zap.Error(err))
 		}
@@ -56,8 +57,8 @@ func main() {
 	defer cancel()
 
 	createUserRequest := &pb.CreateUserRequest{
-		Username: "testdsadsaqquser",
-		Email:    "testusesdqqar@edsadsaqxample.com",
+		Username: "testdsadsaququser",
+		Email:    "testusesdqjqar@edsadsaqxample.com",
 		Password: "securepassword",
 	}
 	createUserResponse, err := client.CreateUser(ctx, createUserRequest)
@@ -71,7 +72,7 @@ func main() {
 	)
 
 	loginUserRequest := &pb.UserLoginRequest{
-		Username: "testuser",
+		Username: "testdsadsaququser",
 		Password: "securepassword",
 	}
 	loginUserResponse, err := client.LoginUser(ctx, loginUserRequest)

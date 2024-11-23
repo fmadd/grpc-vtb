@@ -28,7 +28,7 @@ var (
 			Name: "grpc_server_requests_total",
 			Help: "Total number of gRPC requests received.",
 		},
-		[]string{"method"}, // Лейблы для метода
+		[]string{"method"},
 	)
 	requestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
@@ -36,7 +36,7 @@ var (
 			Help:    "Histogram of response times for gRPC requests.",
 			Buckets: prometheus.DefBuckets,
 		},
-		[]string{"method"}, // Лейблы для метода
+		[]string{"method"},
 	)
 )
 
@@ -180,7 +180,7 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "localhost")
+		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "central-grpc-server")
 		if err != nil {
 			logger.Logger.Fatal("error generating certificate", zap.Error(err))
 		}
@@ -194,7 +194,7 @@ func main() {
 	if err != nil {
 		logger.Logger.Fatal("failed to load key pair", zap.Error(err))
 	}
-	userConn, err := grpc.Dial("localhost:50053", grpc.WithTransportCredentials(creds))
+	userConn, err := grpc.Dial("user:50053", grpc.WithTransportCredentials(creds))
 	if err != nil {
 		logger.Logger.Fatal("did not connect", zap.Error(err))
 	}

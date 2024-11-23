@@ -51,16 +51,29 @@ services:
     networks:
       - grpc-network
 
-  nginx:
+  api-gateway:
     build:
       context: .
-      dockerfile: ./nginx/Dockerfile
+      dockerfile: ./api/api_gateway/Dockerfile
+    depends_on:
+      - central-grpc-server
+    environment:
+      - CENTRAL_GRPC_SERVER_URL=central-grpc-server:50051
     ports:
-      - "80:80"
-      - "443:443"
+      - "8000:8000"
     networks:
       - grpc-network
-
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./cert:/etc/prometheus/cert
+    ports:
+      - "9091:9090"
+    networks:
+      - grpc-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
 networks:
   grpc-network:
     driver: bridge

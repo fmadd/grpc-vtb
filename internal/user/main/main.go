@@ -27,7 +27,7 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "localhost")
+		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "user")
 		if err != nil {
 			logger.Logger.Fatal("error generating certificate", zap.Error(err))
 		}
@@ -40,7 +40,7 @@ func main() {
 	serverOpts := []grpc.ServerOption{}
 
 	creds, err = cert.NewClientTLS(serverCertFile, serverKeyFile)
-	authConn, err := grpc.NewClient("dns:///localhost:8081", grpc.WithTransportCredentials(creds))
+	authConn, err := grpc.NewClient("dns:///auth:8081", grpc.WithTransportCredentials(creds))
 	if err != nil {
 		logger.Logger.Fatal("did not connect", zap.Error(err))
 	}

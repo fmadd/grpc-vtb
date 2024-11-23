@@ -27,7 +27,7 @@ func main() {
 	var err error
 
 	if *tlsEnabled {
-		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "localhost")
+		err = cert.GenerateCertificate(serverCertFile, serverKeyFile, "auth")
 		if err != nil {
 			logger.Logger.Fatal("error generating certificate", zap.Error(err))
 		}
@@ -44,9 +44,9 @@ func main() {
 
 	srv := grpc.NewServer(serverOpts...)
 
-	client := gocloak.NewClient("http://localhost:8180")
+	client := gocloak.NewClient("http://host.docker.internal:8080")
 
-	authService := handler.NewAuthHandler(client, "master", "my_app", "tWTjTwTjxIyQgbGavpxEdMz1Jio5mOz6")
+	authService := handler.NewAuthHandler(client, "master", "my_app", "nwRmlqsDCAoASGsjCZRMLyIYZ1MqOAuY")
 
 	proto.RegisterAuthServiceServer(srv, authService)
 	reflection.Register(srv)
