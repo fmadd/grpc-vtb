@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "grpc_metrics_file"
+    scrape_interval: 5s
+    scheme: https
+    tls_config:
+      cert_file: "../../cert/client/certFile.pem"
+      key_file: "../../cert/client/keyFile.pem"
+      ca_file: "../../cert/ca-cert.pem"
+      insecure_skip_verify: true
+
+    static_configs:
+      - targets:
+          - "localhost:8010"

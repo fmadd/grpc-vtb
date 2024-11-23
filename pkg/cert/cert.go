@@ -70,6 +70,30 @@ func NewServerTLS(certFile, keyFile string) (credentials.TransportCredentials, e
 	return credentials.NewTLS(config), nil
 }
 
+func NewHTTPServerTLS(certFile, keyFile string) (*tls.Config, error) {
+
+	pemClientCA, err := os.ReadFile(CACertFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read CA certificate: %w", err)
+	}
+
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemClientCA) {
+		return nil, errors.New("failed to add client CA's certificate to cert pool")
+	}
+
+	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load server certificate and key: %w", err)
+	}
+
+	return &tls.Config{
+		Certificates: []tls.Certificate{serverCert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    certPool,
+	}, nil
+}
+
 func LoadClientTLSCredentials(certFile string, keyFile string) (credentials.TransportCredentials, error) {
 	pemServerCA, err := os.ReadFile(CACertFile)
 	if err != nil {

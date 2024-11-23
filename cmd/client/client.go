@@ -56,8 +56,8 @@ func main() {
 	defer cancel()
 
 	createUserRequest := &pb.CreateUserRequest{
-		Username: "testuser",
-		Email:    "testuser@example.com",
+		Username: "testdsadsaqquser",
+		Email:    "testusesdqqar@edsadsaqxample.com",
 		Password: "securepassword",
 	}
 	createUserResponse, err := client.CreateUser(ctx, createUserRequest)

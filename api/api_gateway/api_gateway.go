@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/gorilla/mux"
 	pb "github.com/grpc-vtb/api/proto/gen"
@@ -55,12 +57,41 @@ func newClientConnection() pb.UserServiceClient {
 	if err != nil {
 		logger.Logger.Fatal("did not connect", zap.Error(err))
 	}
-	//defer conn.Close()
 
 	return pb.NewUserServiceClient(conn)
 }
 
-// HTTP Handlers
+func sanitizeInput(input string) (string, bool) {
+	original := input
+	input = strings.TrimSpace(input)
+
+	invalidPatterns := []string{
+		"(?i)<script.*?>.*?</script>",
+		"(?i)javascript:",
+		"(?i)data:text/html",
+		"(?i)union.*select",
+		"(?i)drop.*table",
+		"(?i)insert.*into",
+		"(?i)select.*from",
+		"(?i)update.*set",
+		"(?i)--",
+		"(?i);",
+		"(?i)\\*",
+		"(?i)\\|\\|",
+	}
+
+	for _, pattern := range invalidPatterns {
+		re := regexp.MustCompile(pattern)
+		input = re.ReplaceAllString(input, "")
+	}
+
+	disallowedChars := []string{"<", ">", "'", "\"", "`", ";", "\\", "--", "|", "%"}
+	for _, char := range disallowedChars {
+		input = strings.ReplaceAll(input, char, "")
+	}
+
+	return input, input != original
+}
 
 func (s *apiServer) createUserHandler(w http.ResponseWriter, r *http.Request) {
 	var req pb.CreateUserRequest
@@ -68,7 +99,28 @@ func (s *apiServer) createUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
+	username, usernameChanged := sanitizeInput(req.Username)
+	email, emailChanged := sanitizeInput(req.Email)
+	password, passwordChanged := sanitizeInput(req.Password)
 
+	if usernameChanged {
+		http.Error(w, "error-username-invalid-character", http.StatusBadRequest)
+		return
+	}
+	if emailChanged {
+		http.Error(w, "error-email-invalid-character", http.StatusBadRequest)
+		return
+	}
+	if passwordChanged {
+		http.Error(w, "error-password-invalid-character", http.StatusBadRequest)
+		return
+	}
+
+	req.Username = username
+	req.Email = email
+	req.Password = password
+
+	logger.Logger.Info(req.Username)
 	resp, err := s.client.CreateUser(context.Background(), &req)
 	if err != nil {
 		http.Error(w, "Error creating user: "+err.Error(), http.StatusInternalServerError)
@@ -85,7 +137,26 @@ func (s *apiServer) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
+	username, usernameChanged := sanitizeInput(req.Username)
+	email, emailChanged := sanitizeInput(req.Email)
+	password, passwordChanged := sanitizeInput(req.Password)
 
+	if usernameChanged {
+		http.Error(w, "error-username-invalid-character", http.StatusBadRequest)
+		return
+	}
+	if emailChanged {
+		http.Error(w, "error-email-invalid-character", http.StatusBadRequest)
+		return
+	}
+	if passwordChanged {
+		http.Error(w, "error-password-invalid-character", http.StatusBadRequest)
+		return
+	}
+
+	req.Username = username
+	req.Email = email
+	req.Password = password
 	resp, err := s.client.LoginUser(context.Background(), &req)
 	if err != nil {
 		http.Error(w, "Error logging in: "+err.Error(), http.StatusInternalServerError)
@@ -102,7 +173,14 @@ func (s *apiServer) validateUserHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-
+	logger.Logger.Info(req.AccessToken)
+	AccessToken, AccessTokenChanged := sanitizeInput(req.AccessToken)
+	if AccessTokenChanged {
+		http.Error(w, "error-token-invalid-character", http.StatusBadRequest)
+		return
+	}
+	req.AccessToken = AccessToken
+	logger.Logger.Info(req.AccessToken)
 	resp, err := s.client.ValidateUser(context.Background(), &req)
 	if err != nil {
 		http.Error(w, "Error validating user: "+err.Error(), http.StatusInternalServerError)
@@ -119,7 +197,12 @@ func (s *apiServer) refreshTokenHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-
+	RefreshToken, AccessTokenChanged := sanitizeInput(req.RefreshToken)
+	if AccessTokenChanged {
+		http.Error(w, "error-token-invalid-character", http.StatusBadRequest)
+		return
+	}
+	req.RefreshToken = RefreshToken
 	resp, err := s.client.RefreshGrpcToken(context.Background(), &req)
 	if err != nil {
 		http.Error(w, "Error refreshing token: "+err.Error(), http.StatusUnauthorized)
